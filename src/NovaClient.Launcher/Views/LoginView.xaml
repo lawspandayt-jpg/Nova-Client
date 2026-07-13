@@ -9,7 +9,7 @@
         <common:InverseBoolConverter x:Key="InvBool"/>
     </UserControl.Resources>
 
-    <Grid>
+    <Grid Style="{StaticResource PageTransition}">
         <Border Style="{StaticResource Card}" Width="420" VerticalAlignment="Center" HorizontalAlignment="Center"
                 Effect="{StaticResource PanelShadow}" Padding="36">
             <StackPanel>
@@ -68,6 +68,38 @@
                 <TextBlock Text="{Binding ErrorText}" Foreground="{DynamicResource DangerBrush}" FontSize="12"
                            TextWrapping="Wrap" HorizontalAlignment="Center" Margin="0,12,0,0" TextAlignment="Center"
                            Visibility="{Binding ErrorText, Converter={StaticResource StrToVis}}"/>
+
+                <!-- Saved accounts (multi-account quick switch) -->
+                <StackPanel Visibility="{Binding HasSavedAccounts, Converter={StaticResource BoolToVis}}">
+                    <Separator Margin="0,20,0,10" Background="{DynamicResource BorderBrush}"/>
+                    <TextBlock Text="Saved accounts" FontSize="11" Foreground="{DynamicResource TextDimBrush}" Margin="2,0,0,8"/>
+                    <ItemsControl ItemsSource="{Binding SavedAccounts}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Style="{StaticResource GhostButton}" Command="{Binding UseCommand}"
+                                            HorizontalContentAlignment="Left" Padding="12,8">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Path Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center"
+                                                  Fill="{DynamicResource AccentBrush}"
+                                                  Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z"/>
+                                            <TextBlock Text="{Binding Name}" Margin="10,0,0,0" FontFamily="Segoe UI Semibold"/>
+                                            <TextBlock Text="{Binding MaskedEmail}" Margin="10,1,0,0" FontSize="11"
+                                                       Foreground="{DynamicResource TextDimBrush}"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Grid.Column="1" Style="{StaticResource CaptionButton}" Content="&#xE8BB;"
+                                            Width="30" Height="30" Margin="6,0,0,0" ToolTip="Forget this account"
+                                            Command="{Binding RemoveCommand}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
 
                 <Separator Margin="0,22,0,14" Background="{DynamicResource BorderBrush}"/>
                 <TextBlock Text="{Binding OwnershipNote}" FontSize="11" Foreground="{DynamicResource TextDimBrush}"

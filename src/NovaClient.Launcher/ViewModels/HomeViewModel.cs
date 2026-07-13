@@ -334,7 +334,9 @@ public sealed class HomeViewModel : ViewModelBase
 
     private void SwitchAccount()
     {
-        _services.Auth.SignOut();
+        // Keeps the current account saved (with its tokens) so it appears in the login screen's
+        // quick-switch list; only the active session is cleared.
+        _services.Auth.Deactivate();
         _main.ShowLogin();
     }
 

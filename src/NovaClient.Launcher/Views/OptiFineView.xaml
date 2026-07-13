@@ -7,6 +7,7 @@
         <common:StringToVisibilityConverter x:Key="StrToVis"/>
     </UserControl.Resources>
 
+    <Grid Style="{StaticResource PageTransition}">
     <Border Style="{StaticResource Card}" Width="560" VerticalAlignment="Center" HorizontalAlignment="Center"
             Effect="{StaticResource PanelShadow}" Padding="32">
         <StackPanel>
@@ -55,4 +56,5 @@
             </Grid>
         </StackPanel>
     </Border>
+    </Grid>
 </UserControl>

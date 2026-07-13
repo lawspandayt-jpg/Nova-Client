@@ -8,6 +8,7 @@
     <UseWPF>true</UseWPF>
     <AssemblyName>NovaClient</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <Version>1.0.0</Version>
     <Company>Nova Client</Company>
     <Product>Nova Client Launcher</Product>
@@ -24,6 +25,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2592.51" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\logo.png" />
   </ItemGroup>
 
   <ItemGroup>

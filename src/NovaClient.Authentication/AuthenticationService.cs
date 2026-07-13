@@ -6,15 +6,18 @@ namespace NovaClient.Authentication;
 
 /// <summary>
 /// Orchestrates the full chain: Microsoft OAuth (PKCE) → Xbox Live → XSTS → Minecraft services →
-/// entitlement check → profile. Persists only the MSA refresh token + Minecraft token (DPAPI).
+/// entitlement check → profile. Supports multiple saved accounts: each entry keeps only its MSA
+/// refresh token + last Minecraft token, DPAPI-encrypted in a single blob.
 /// </summary>
 public sealed class AuthenticationService
 {
-    private const string StoreKey = "auth";
+    private const string StoreKey = "accounts";
+    private const string LegacyStoreKey = "auth";
     private static readonly JsonSerializerOptions JsonOptions = new();
 
     private readonly MicrosoftOAuth _oauth;
     private readonly SecureTokenStore _store;
+    private PersistedAccounts _accounts = new();
     private string _msaRefreshToken = "";
 
     public AuthSession? Session { get; private set; }
@@ -25,6 +28,7 @@ public sealed class AuthenticationService
     {
         _oauth = new MicrosoftOAuth(microsoftClientId);
         _store = store;
+        LoadAccounts();
     }
 
     private void Status(string text)
@@ -32,6 +36,54 @@ public sealed class AuthenticationService
         NovaLog.Info("Auth", text);
         StatusChanged?.Invoke(text);
     }
+
+    // ------------------------------------------------------------------ account list
+
+    private void LoadAccounts()
+    {
+        try
+        {
+            var json = _store.Load(StoreKey);
+            if (json is not null)
+            {
+                _accounts = JsonSerializer.Deserialize<PersistedAccounts>(json) ?? new PersistedAccounts();
+                return;
+            }
+            // Migrate the pre-multi-account single blob.
+            var legacy = _store.Load(LegacyStoreKey);
+            if (legacy is not null)
+            {
+                var single = JsonSerializer.Deserialize<PersistedAuth>(legacy);
+                if (single is not null && single.MsaRefreshToken.Length > 0)
+                {
+                    _accounts = new PersistedAccounts { Accounts = { single }, ActiveUuid = single.Uuid };
+                    SaveAccounts();
+                }
+                _store.Delete(LegacyStoreKey);
+            }
+        }
+        catch
+        {
+            _accounts = new PersistedAccounts();
+        }
+    }
+
+    private void SaveAccounts() => _store.Save(StoreKey, JsonSerializer.Serialize(_accounts, JsonOptions));
+
+    /// <summary>Accounts available on the login screen (no secrets).</summary>
+    public IReadOnlyList<SavedAccount> GetSavedAccounts() =>
+        _accounts.Accounts.Select(a => new SavedAccount(a.Uuid, a.Name, a.Email)).ToList();
+
+    /// <summary>Removes one saved account's tokens (login-screen "X" button).</summary>
+    public void RemoveAccount(string uuid)
+    {
+        _accounts.Accounts.RemoveAll(a => a.Uuid == uuid);
+        if (_accounts.ActiveUuid == uuid) _accounts.ActiveUuid = "";
+        SaveAccounts();
+        NovaLog.Info("Auth", "Removed a saved account.");
+    }
+
+    // ------------------------------------------------------------------ sign-in
 
     public PkceSession BeginLogin() => MicrosoftOAuth.CreatePkceSession();
 
@@ -47,44 +99,45 @@ public sealed class AuthenticationService
         return await RunChainAsync(msa, email, ct);
     }
 
-    /// <summary>Restores the cached session, refreshing tokens as needed. Null → sign-in required.</summary>
-    public async Task<AuthSession?> TryRestoreAsync(CancellationToken ct = default)
+    /// <summary>Restores the last active account, refreshing tokens as needed. Null → sign-in required.</summary>
+    public Task<AuthSession?> TryRestoreAsync(CancellationToken ct = default) =>
+        _accounts.ActiveUuid.Length == 0 ? Task.FromResult<AuthSession?>(null) : ActivateAsync(_accounts.ActiveUuid, ct);
+
+    /// <summary>Signs in to a specific saved account (login-screen account picker).</summary>
+    public async Task<AuthSession?> ActivateAsync(string uuid, CancellationToken ct = default)
     {
-        var json = _store.Load(StoreKey);
-        if (json is null) return null;
+        var entry = _accounts.Accounts.FirstOrDefault(a => a.Uuid == uuid);
+        if (entry is null || entry.MsaRefreshToken.Length == 0) return null;
 
-        PersistedAuth? persisted;
-        try { persisted = JsonSerializer.Deserialize<PersistedAuth>(json); }
-        catch { _store.Delete(StoreKey); return null; }
-        if (persisted is null || string.IsNullOrEmpty(persisted.MsaRefreshToken)) return null;
-
-        _msaRefreshToken = persisted.MsaRefreshToken;
+        _msaRefreshToken = entry.MsaRefreshToken;
 
         // Reuse a still-valid Minecraft token without a network round-trip.
-        if (DateTimeOffset.UtcNow < persisted.McTokenExpires - TimeSpan.FromMinutes(10) && persisted.Uuid.Length > 0)
+        if (DateTimeOffset.UtcNow < entry.McTokenExpires - TimeSpan.FromMinutes(10) && entry.Uuid.Length > 0)
         {
             Session = new AuthSession
             {
-                Email = persisted.Email,
-                MinecraftAccessToken = persisted.McAccessToken,
-                MinecraftTokenExpires = persisted.McTokenExpires,
-                Profile = new MinecraftProfile(persisted.Uuid, persisted.Name, persisted.SkinUrl),
-                OwnsMinecraft = persisted.OwnsMinecraft
+                Email = entry.Email,
+                MinecraftAccessToken = entry.McAccessToken,
+                MinecraftTokenExpires = entry.McTokenExpires,
+                Profile = new MinecraftProfile(entry.Uuid, entry.Name, entry.SkinUrl),
+                OwnsMinecraft = entry.OwnsMinecraft
             };
-            Status($"Welcome back, {persisted.Name}.");
+            _accounts.ActiveUuid = entry.Uuid;
+            SaveAccounts();
+            Status($"Welcome back, {entry.Name}.");
             return Session;
         }
 
         try
         {
-            Status("Refreshing Microsoft session…");
-            var msa = await _oauth.RefreshAsync(persisted.MsaRefreshToken, ct);
-            return await RunChainAsync(msa, persisted.Email, ct);
+            Status($"Refreshing session for {entry.Name}…");
+            var msa = await _oauth.RefreshAsync(entry.MsaRefreshToken, ct);
+            return await RunChainAsync(msa, entry.Email, ct);
         }
         catch (AuthException ex) when (ex.Kind is AuthErrorKind.RefreshExpired or AuthErrorKind.MicrosoftAuthFailed)
         {
-            NovaLog.Warn("Auth", "Saved session could not be refreshed; sign-in required.");
-            SignOut();
+            NovaLog.Warn("Auth", "Saved session could not be refreshed; account requires a fresh sign-in.");
+            RemoveAccount(uuid);
             return null;
         }
     }
@@ -122,7 +175,7 @@ public sealed class AuthenticationService
             // whose entitlement list may be empty.
             OwnsMinecraft = true
         };
-        Persist();
+        PersistActive();
         Status($"Signed in as {profile.Name}.");
         return Session;
     }
@@ -138,10 +191,10 @@ public sealed class AuthenticationService
         return await RunChainAsync(msa, Session.Email, ct);
     }
 
-    private void Persist()
+    private void PersistActive()
     {
         if (Session is null) return;
-        var persisted = new PersistedAuth
+        var entry = new PersistedAuth
         {
             Email = Session.Email,
             MsaRefreshToken = _msaRefreshToken,
@@ -152,15 +205,34 @@ public sealed class AuthenticationService
             SkinUrl = Session.Profile.SkinUrl,
             OwnsMinecraft = Session.OwnsMinecraft
         };
-        _store.Save(StoreKey, JsonSerializer.Serialize(persisted, JsonOptions));
+        _accounts.Accounts.RemoveAll(a => a.Uuid == entry.Uuid);
+        _accounts.Accounts.Insert(0, entry);
+        _accounts.ActiveUuid = entry.Uuid;
+        SaveAccounts();
     }
 
-    /// <summary>Removes stored tokens and the active profile. Launcher settings are untouched.</summary>
+    /// <summary>
+    /// Signs the CURRENT account out: its stored tokens are deleted and the profile cleared.
+    /// Other saved accounts and launcher settings are untouched.
+    /// </summary>
     public void SignOut()
     {
-        _store.Delete(StoreKey);
+        if (Session is not null) RemoveAccount(Session.Profile.Uuid);
         _msaRefreshToken = "";
         Session = null;
-        NovaLog.Info("Auth", "Signed out; local tokens removed.");
+        NovaLog.Info("Auth", "Signed out; local tokens for the account removed.");
+    }
+
+    /// <summary>
+    /// Switch Account: clears the active session but KEEPS the account saved, so the login screen
+    /// offers both the saved account list and fresh email entry.
+    /// </summary>
+    public void Deactivate()
+    {
+        _accounts.ActiveUuid = "";
+        SaveAccounts();
+        _msaRefreshToken = "";
+        Session = null;
+        NovaLog.Info("Auth", "Session deactivated (account kept for quick switch).");
     }
 }

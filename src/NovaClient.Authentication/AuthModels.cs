@@ -19,7 +19,17 @@ public sealed class AuthSession
     public bool MinecraftTokenValid => DateTimeOffset.UtcNow < MinecraftTokenExpires - TimeSpan.FromMinutes(5);
 }
 
-/// <summary>Shape of the DPAPI-encrypted cache (config/secure/auth.bin). Never stored in plain text.</summary>
+/// <summary>All saved accounts (DPAPI-encrypted at rest as config/secure/accounts.bin).</summary>
+public sealed class PersistedAccounts
+{
+    [JsonPropertyName("accounts")] public List<PersistedAuth> Accounts { get; set; } = new();
+    [JsonPropertyName("activeUuid")] public string ActiveUuid { get; set; } = "";
+}
+
+/// <summary>Non-secret account facts for pickers (no tokens).</summary>
+public sealed record SavedAccount(string Uuid, string Name, string Email);
+
+/// <summary>Shape of one DPAPI-encrypted account entry. Never stored in plain text.</summary>
 public sealed class PersistedAuth
 {
     [JsonPropertyName("email")] public string Email { get; set; } = "";

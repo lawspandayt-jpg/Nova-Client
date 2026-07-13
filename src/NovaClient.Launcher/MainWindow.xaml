@@ -4,6 +4,7 @@
         xmlns:vm="clr-namespace:NovaClient.Launcher.ViewModels"
         xmlns:views="clr-namespace:NovaClient.Launcher.Views"
         Title="{Binding LauncherTitle}"
+        Icon="Assets/logo.png"
         Width="980" Height="640" MinWidth="820" MinHeight="560"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None" ResizeMode="CanResizeWithGrip"

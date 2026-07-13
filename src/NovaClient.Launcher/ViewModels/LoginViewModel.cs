@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Windows;
 using NovaClient.Authentication;
 using NovaClient.Core.Logging;
@@ -6,6 +7,15 @@ using NovaClient.Launcher.Common;
 using NovaClient.Launcher.Views;
 
 namespace NovaClient.Launcher.ViewModels;
+
+public sealed class SavedAccountItem
+{
+    public required string Uuid { get; init; }
+    public required string Name { get; init; }
+    public required string MaskedEmail { get; init; }
+    public required AsyncRelayCommand UseCommand { get; init; }
+    public required RelayCommand RemoveCommand { get; init; }
+}
 
 public sealed class LoginViewModel : ViewModelBase
 {
@@ -34,6 +44,11 @@ public sealed class LoginViewModel : ViewModelBase
     public AsyncRelayCommand ContinueCommand { get; }
     public RelayCommand SettingsCommand { get; }
 
+    public ObservableCollection<SavedAccountItem> SavedAccounts { get; } = new();
+
+    private bool _hasSavedAccounts;
+    public bool HasSavedAccounts { get => _hasSavedAccounts; set => Set(ref _hasSavedAccounts, value); }
+
     public LoginViewModel(MainViewModel main)
     {
         _main = main;
@@ -42,6 +57,62 @@ public sealed class LoginViewModel : ViewModelBase
         _email = settings.RememberEmail ? settings.RememberedEmail : "";
         ContinueCommand = new AsyncRelayCommand(ContinueAsync, () => !IsBusy);
         SettingsCommand = new RelayCommand(main.ShowSettings);
+        RefreshSavedAccounts();
+    }
+
+    private void RefreshSavedAccounts()
+    {
+        SavedAccounts.Clear();
+        foreach (var account in _main.Services.Auth.GetSavedAccounts())
+        {
+            SavedAccounts.Add(new SavedAccountItem
+            {
+                Uuid = account.Uuid,
+                Name = account.Name,
+                MaskedEmail = EmailMasker.Mask(account.Email),
+                UseCommand = new AsyncRelayCommand(() => UseSavedAccountAsync(account.Uuid), () => !IsBusy),
+                RemoveCommand = new RelayCommand(() =>
+                {
+                    _main.Services.Auth.RemoveAccount(account.Uuid);
+                    RefreshSavedAccounts();
+                })
+            });
+        }
+        HasSavedAccounts = SavedAccounts.Count > 0;
+    }
+
+    private async Task UseSavedAccountAsync(string uuid)
+    {
+        ErrorText = "";
+        IsBusy = true;
+        var auth = _main.Services.Auth;
+        auth.StatusChanged += OnAuthStatus;
+        try
+        {
+            var session = await auth.ActivateAsync(uuid);
+            if (session is not null)
+            {
+                _main.ShowHome();
+                return;
+            }
+            ErrorText = "That saved session expired. Please sign in with Microsoft again.";
+            RefreshSavedAccounts();
+        }
+        catch (AuthException ex)
+        {
+            ErrorText = ex.UserMessage;
+        }
+        catch (Exception ex)
+        {
+            NovaLog.Error("Login", "Saved-account sign-in failed", ex);
+            ErrorText = "Sign-in failed unexpectedly. See the launcher log.";
+        }
+        finally
+        {
+            auth.StatusChanged -= OnAuthStatus;
+            StatusText = "";
+            IsBusy = false;
+        }
     }
 
     /// <summary>Silently restores a cached session at startup (token refresh included).</summary>

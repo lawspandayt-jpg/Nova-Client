@@ -215,6 +215,31 @@
         <Setter Property="Margin" Value="0,0,0,10"/>
     </Style>
 
+    <!-- Applied to each screen's root: gentle fade + rise on navigation -->
+    <Style x:Key="PageTransition" TargetType="FrameworkElement">
+        <Setter Property="RenderTransform">
+            <Setter.Value>
+                <TranslateTransform Y="14"/>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Opacity" Value="0"/>
+        <Style.Triggers>
+            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.28"/>
+                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)"
+                                         To="0" Duration="0:0:0.32">
+                            <DoubleAnimation.EasingFunction>
+                                <CubicEase EasingMode="EaseOut"/>
+                            </DoubleAnimation.EasingFunction>
+                        </DoubleAnimation>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Style.Triggers>
+    </Style>
+
     <Style x:Key="Card" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>

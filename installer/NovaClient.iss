@@ -29,6 +29,7 @@ SolidCompression=yes
 WizardStyle=modern
 UninstallDisplayName={#AppName}
 LicenseFile=..\docs\THIRD-PARTY-NOTICES.md
+SetupIconFile=..\src\NovaClient.Launcher\Assets\app.ico
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
