@@ -2,6 +2,20 @@
 
 A legitimate Minecraft: Java Edition **1.8.9** launcher + custom PvP client for Windows 10/11.
 
+## 📥 Download (no building required)
+
+Grab the latest version from the **[Releases page](https://github.com/lawspandayt-jpg/nova-client/releases/latest)**:
+
+- **`NovaClientSetup-x.x.x.exe`** — installer (Start-menu shortcut, uninstaller) ← most people want this
+- **`NovaClient.exe`** — portable single file, just run it from anywhere
+
+Then: enter your Microsoft email → sign in on Microsoft's official page → follow the one-time
+OptiFine setup → **Launch**. In game, press **Right Shift** for the client menu.
+You need a Microsoft account that owns Minecraft: Java Edition.
+
+> Windows SmartScreen may warn on first run because the exe isn't code-signed yet —
+> click **More info → Run anyway**.
+
 - Official **Microsoft account** sign-in (OAuth 2.0 + PKCE, WebView2, browser fallback) — no
   cracked/offline accounts, no password ever touches the launcher
 - **Minecraft ownership verification** before the Launch button unlocks
