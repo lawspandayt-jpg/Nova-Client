@@ -1,0 +1,53 @@
+<Window x:Class="NovaClient.Launcher.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:NovaClient.Launcher.ViewModels"
+        xmlns:views="clr-namespace:NovaClient.Launcher.Views"
+        Title="{Binding LauncherTitle}"
+        Width="980" Height="640" MinWidth="820" MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None" ResizeMode="CanResizeWithGrip"
+        Background="{DynamicResource BgBrush}">
+
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:LoginViewModel}">
+            <views:LoginView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+            <views:HomeView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:OptiFineViewModel}">
+            <views:OptiFineView/>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="44"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Custom title bar -->
+        <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <StackPanel Orientation="Horizontal" Margin="16,0" VerticalAlignment="Center">
+                <!-- Original logo mark: a simple four-point star -->
+                <Path Width="18" Height="18" Stretch="Uniform" Fill="{DynamicResource AccentBrush}"
+                      Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z"/>
+                <TextBlock Text="{Binding LauncherTitle}" Margin="10,0,0,0" VerticalAlignment="Center"
+                           FontFamily="Segoe UI Semibold" FontSize="14"/>
+                <TextBlock Text="{Binding VersionText}" Margin="8,1,0,0" VerticalAlignment="Center"
+                           FontSize="11" Foreground="{DynamicResource TextDimBrush}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0">
+                <Button Style="{StaticResource CaptionButton}" Content="&#xE921;" Click="Minimize_Click" ToolTip="Minimize"/>
+                <Button Style="{StaticResource CaptionButton}" Content="&#xE8BB;" Click="Close_Click" ToolTip="Close"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Active screen -->
+        <ContentControl Grid.Row="1" Content="{Binding Current}"/>
+    </Grid>
+</Window>

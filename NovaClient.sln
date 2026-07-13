@@ -1,0 +1,71 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C8AD1E49-654D-4C46-87ED-0734656F287C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaClient.Authentication", "src\NovaClient.Authentication\NovaClient.Authentication.csproj", "{A10834A8-95E1-4FF2-9D56-79F8081ABB0D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaClient.Core", "src\NovaClient.Core\NovaClient.Core.csproj", "{A178F80F-D70C-4FDA-983E-69F8D050810B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaClient.GameClient", "src\NovaClient.GameClient\NovaClient.GameClient.csproj", "{FB66633A-433E-470F-86F4-B315DF7D8281}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaClient.Launcher", "src\NovaClient.Launcher\NovaClient.Launcher.csproj", "{6A555CCB-69F2-4CAD-8892-A479FCF77237}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaClient.Minecraft", "src\NovaClient.Minecraft\NovaClient.Minecraft.csproj", "{2231DF8E-D59A-489D-A833-270E89E19FF5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaClient.Updater", "src\NovaClient.Updater\NovaClient.Updater.csproj", "{A7B907A6-382B-4FFB-AD94-5D460962AD48}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{DD31D643-92AE-44F0-A2F5-335C0652DA4C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaClient.Tests", "tests\NovaClient.Tests\NovaClient.Tests.csproj", "{E0419883-36D6-42F0-A107-A3DDBB6FC105}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A10834A8-95E1-4FF2-9D56-79F8081ABB0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A10834A8-95E1-4FF2-9D56-79F8081ABB0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A10834A8-95E1-4FF2-9D56-79F8081ABB0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A10834A8-95E1-4FF2-9D56-79F8081ABB0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A178F80F-D70C-4FDA-983E-69F8D050810B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A178F80F-D70C-4FDA-983E-69F8D050810B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A178F80F-D70C-4FDA-983E-69F8D050810B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A178F80F-D70C-4FDA-983E-69F8D050810B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB66633A-433E-470F-86F4-B315DF7D8281}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB66633A-433E-470F-86F4-B315DF7D8281}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB66633A-433E-470F-86F4-B315DF7D8281}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB66633A-433E-470F-86F4-B315DF7D8281}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A555CCB-69F2-4CAD-8892-A479FCF77237}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A555CCB-69F2-4CAD-8892-A479FCF77237}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A555CCB-69F2-4CAD-8892-A479FCF77237}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A555CCB-69F2-4CAD-8892-A479FCF77237}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2231DF8E-D59A-489D-A833-270E89E19FF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2231DF8E-D59A-489D-A833-270E89E19FF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2231DF8E-D59A-489D-A833-270E89E19FF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2231DF8E-D59A-489D-A833-270E89E19FF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7B907A6-382B-4FFB-AD94-5D460962AD48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7B907A6-382B-4FFB-AD94-5D460962AD48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7B907A6-382B-4FFB-AD94-5D460962AD48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7B907A6-382B-4FFB-AD94-5D460962AD48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0419883-36D6-42F0-A107-A3DDBB6FC105}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0419883-36D6-42F0-A107-A3DDBB6FC105}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0419883-36D6-42F0-A107-A3DDBB6FC105}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0419883-36D6-42F0-A107-A3DDBB6FC105}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A10834A8-95E1-4FF2-9D56-79F8081ABB0D} = {C8AD1E49-654D-4C46-87ED-0734656F287C}
+		{A178F80F-D70C-4FDA-983E-69F8D050810B} = {C8AD1E49-654D-4C46-87ED-0734656F287C}
+		{FB66633A-433E-470F-86F4-B315DF7D8281} = {C8AD1E49-654D-4C46-87ED-0734656F287C}
+		{6A555CCB-69F2-4CAD-8892-A479FCF77237} = {C8AD1E49-654D-4C46-87ED-0734656F287C}
+		{2231DF8E-D59A-489D-A833-270E89E19FF5} = {C8AD1E49-654D-4C46-87ED-0734656F287C}
+		{A7B907A6-382B-4FFB-AD94-5D460962AD48} = {C8AD1E49-654D-4C46-87ED-0734656F287C}
+		{E0419883-36D6-42F0-A107-A3DDBB6FC105} = {DD31D643-92AE-44F0-A2F5-335C0652DA4C}
+	EndGlobalSection
+EndGlobal

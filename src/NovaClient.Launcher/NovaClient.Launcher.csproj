@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>NovaClient</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Version>1.0.0</Version>
+    <Company>Nova Client</Company>
+    <Product>Nova Client Launcher</Product>
+    <Copyright>© 2026 Nova Client. Not affiliated with Mojang or Microsoft.</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NovaClient.Core\NovaClient.Core.csproj" />
+    <ProjectReference Include="..\NovaClient.Authentication\NovaClient.Authentication.csproj" />
+    <ProjectReference Include="..\NovaClient.Minecraft\NovaClient.Minecraft.csproj" />
+    <ProjectReference Include="..\NovaClient.GameClient\NovaClient.GameClient.csproj" />
+    <ProjectReference Include="..\NovaClient.Updater\NovaClient.Updater.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2592.51" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="branding.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- The in-game client jar is embedded INSIDE the exe (single-file friendly) and extracted
+         to %AppData%\NovaClient\client at startup. -->
+    <EmbeddedResource Include="..\..\client-java\dist\nova-client.jar" Condition="Exists('..\..\client-java\dist\nova-client.jar')">
+      <LogicalName>NovaClient.Launcher.nova-client.jar</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

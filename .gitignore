@@ -1,0 +1,20 @@
+# Build outputs
+bin/
+obj/
+dist/
+client-java/out/
+client-java/dist/
+client-java/lib/
+
+# IDE
+.vs/
+.idea/
+*.user
+
+# Never commit game/OptiFine files or downloaded artifacts
+*.jar
+!gradle/wrapper/*.jar
+
+# Secrets / certificates
+*.pfx
+*.snk

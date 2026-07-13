@@ -1,0 +1,58 @@
+<UserControl x:Class="NovaClient.Launcher.Views.OptiFineView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:common="clr-namespace:NovaClient.Launcher.Common">
+    <UserControl.Resources>
+        <common:BoolToStatusBrushConverter x:Key="StatusBrush"/>
+        <common:StringToVisibilityConverter x:Key="StrToVis"/>
+    </UserControl.Resources>
+
+    <Border Style="{StaticResource Card}" Width="560" VerticalAlignment="Center" HorizontalAlignment="Center"
+            Effect="{StaticResource PanelShadow}" Padding="32">
+        <StackPanel>
+            <TextBlock Text="OptiFine Setup" Style="{StaticResource SectionTitle}" FontSize="20"/>
+            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextDimBrush}" FontSize="13">
+                Nova Client loads OptiFine through its own tweaker (no Forge). OptiFine cannot be
+                redistributed, so it takes one manual step:
+            </TextBlock>
+
+            <StackPanel Margin="0,16,0,0">
+                <TextBlock FontSize="13" Foreground="{DynamicResource TextBrush}">
+                    <Run Text="1."/> <Run Text=" Download the official jar for Minecraft 1.8.9 (recommended: "/><Run Text="{Binding RecommendedEdition, Mode=OneWay}" FontFamily="Consolas"/><Run Text=")"/>
+                </TextBlock>
+                <Button Style="{StaticResource GhostButton}" Content="Open optifine.net/downloads" Margin="18,8,0,0"
+                        HorizontalAlignment="Left" Padding="12,7" FontSize="12"
+                        Command="{Binding OpenOptiFineSiteCommand}"/>
+                <TextBlock FontSize="13" Margin="0,14,0,0">
+                    <Run Text="2."/> <Run Text=" Select the downloaded jar:"/>
+                </TextBlock>
+                <Grid Margin="18,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Style="{StaticResource NovaTextBox}" IsReadOnly="True"
+                             Text="{Binding SelectedFile, Mode=OneWay}" FontSize="12"/>
+                    <Button Grid.Column="1" Style="{StaticResource GhostButton}" Content="Browse…" Margin="8,0,0,0"
+                            Command="{Binding BrowseCommand}"/>
+                </Grid>
+            </StackPanel>
+
+            <!-- Validation status -->
+            <StackPanel Orientation="Horizontal" Margin="0,18,0,0"
+                        Visibility="{Binding StatusText, Converter={StaticResource StrToVis}}">
+                <Ellipse Width="9" Height="9" VerticalAlignment="Top" Margin="0,5,0,0"
+                         Fill="{Binding StatusOk, Converter={StaticResource StatusBrush}}"/>
+                <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" FontSize="12" Margin="9,0,0,0"
+                           MaxWidth="460" Foreground="{DynamicResource TextDimBrush}"/>
+            </StackPanel>
+
+            <Grid Margin="0,24,0,0">
+                <Button Style="{StaticResource GhostButton}" Content="Back" HorizontalAlignment="Left"
+                        Command="{Binding BackCommand}" Padding="16,9"/>
+                <Button Style="{StaticResource NovaButton}" Content="Install OptiFine" HorizontalAlignment="Right"
+                        Command="{Binding InstallCommand}" Padding="18,9"/>
+            </Grid>
+        </StackPanel>
+    </Border>
+</UserControl>

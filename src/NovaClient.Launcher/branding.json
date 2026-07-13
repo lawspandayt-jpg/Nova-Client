@@ -1,0 +1,19 @@
+{
+  "clientName": "Nova Client",
+  "launcherTitle": "Nova Client",
+  "clientLogo": "Assets/logo.png",
+  "launcherLogo": "Assets/logo.png",
+  "accentColor": "#7C5CFF",
+  "websiteUrl": "https://example.com",
+  "discordUrl": "https://discord.gg/example",
+  "supportUrl": "https://example.com/support",
+  "privacyUrl": "https://example.com/privacy",
+  "updateApiUrl": "https://example.com/updates/manifest.json",
+  "launcherVersion": "1.0.0",
+  "gameClientVersion": "1.0.0",
+  "minecraftVersion": "1.8.9",
+  "microsoftClientId": "f0a3c062-e7c1-4fbc-bcf7-8e8b46d6b35f",
+  "optifineVersion": "1.8.9_HD_U_M5",
+  "defaultRamMb": 2048,
+  "defaultGameDirectory": null
+}
