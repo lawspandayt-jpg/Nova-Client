@@ -53,17 +53,17 @@ public sealed class NovaVersionService
     public async Task EnsureBootstrapLibrariesAsync(IProgress<DownloadProgress>? progress, CancellationToken ct = default)
     {
         var items = new List<DownloadItem>();
-        foreach (var (name, baseUrl, size) in new[]
+        foreach (var (name, baseUrl, sha1, size) in new[]
                  {
-                     ("net.minecraft:launchwrapper:1.12", MojangLibraries, 32999L),
-                     ("org.ow2.asm:asm-debug-all:5.0.3", MavenCentral, 380792L),
+                     ("net.minecraft:launchwrapper:1.12", MojangLibraries, "111e7bea9c968cdb3d06ef4632bf7ff0824d0f36", 32999L),
+                     ("org.ow2.asm:asm-debug-all:5.0.3", MavenCentral, "f9e364ae2a66ce2a543012a4668856e84e5dab74", 378662L),
                  })
         {
             var lib = new Library { Name = name };
             var relative = lib.MavenPath();
             var destination = Path.Combine(_paths.Libraries, relative.Replace('/', Path.DirectorySeparatorChar));
             if (!File.Exists(destination))
-                items.Add(new DownloadItem(baseUrl + relative, destination, Sha1: null, size));
+                items.Add(new DownloadItem(baseUrl + relative, destination, sha1, size));
         }
         if (items.Count > 0)
             await new DownloadService().DownloadAllAsync(items, progress, ct);

@@ -77,8 +77,9 @@ public sealed class HomeViewModel : ViewModelBase
     private bool _installReady;
     public bool InstallReady { get => _installReady; set => Set(ref _installReady, value); }
 
+    // OptiFine is recommended but optional — players can launch immediately and add it later.
     public bool CanLaunch =>
-        !IsBusy && !GameRunning && OwnershipOk && InstallReady && JavaOk && OptiFineOk && _prepared is not null;
+        !IsBusy && !GameRunning && OwnershipOk && InstallReady && JavaOk && _prepared is not null;
 
     // ----- commands -----
     public AsyncRelayCommand LaunchCommand { get; }
@@ -108,6 +109,9 @@ public sealed class HomeViewModel : ViewModelBase
         _ = CheckUpdatesAsync();
         await DetectJavaAsync();
         await PrepareAsync(repair: false);
+        // Zero-setup experience: fetch the official Temurin 8 runtime automatically when the
+        // system has no compatible Java. The button remains as a manual retry.
+        if (!JavaOk) await InstallJavaAsync();
     }
 
     private async Task LoadSkinAsync()
@@ -229,7 +233,7 @@ public sealed class HomeViewModel : ViewModelBase
             OptiFineOk = optifine is not null;
             OptiFineStatus = optifine is not null
                 ? $"OptiFine {optifine.Edition} — enabled ✓"
-                : "OptiFine is not installed — set it up to continue.";
+                : "OptiFine not installed (optional — adds zoom + better FPS).";
         }
         catch (Exception ex)
         {
