@@ -45,7 +45,7 @@
             </StackPanel>
 
             <!-- Hero (large) -->
-            <Border Grid.Row="1" CornerRadius="16" ClipToBounds="True" MinHeight="300"
+            <Border Grid.Row="1" CornerRadius="16" ClipToBounds="True" MinHeight="230" MaxHeight="330"
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
@@ -244,7 +244,7 @@
                         <ItemsControl ItemsSource="{Binding Friends}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Margin="0,3" Height="38">
+                                    <Grid Margin="0,3" MinHeight="38">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
@@ -265,12 +265,31 @@
                                                        TextTrimming="CharacterEllipsis"/>
                                             <TextBlock Text="{Binding Status}" FontSize="9.5" Foreground="{DynamicResource TextDimBrush}"/>
                                         </StackPanel>
+
+                                        <!-- Remove (normal/pending) -->
                                         <Button Grid.Column="2" Style="{StaticResource CaptionButton}" Width="24" Height="24"
-                                                VerticalAlignment="Center" ToolTip="Remove friend" Command="{Binding RemoveCommand}">
+                                                VerticalAlignment="Center" ToolTip="Remove" Command="{Binding RemoveCommand}"
+                                                Visibility="{Binding IsIncoming, Converter={StaticResource InvBoolToVis}}">
                                             <Path Data="{StaticResource IconClose}" StrokeThickness="1.5" Stretch="Uniform"
                                                   Width="8" Height="8"
                                                   Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                                         </Button>
+
+                                        <!-- Accept / Decline (incoming request) -->
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
+                                                    Visibility="{Binding IsIncoming, Converter={StaticResource BoolToVis}}">
+                                            <Button Style="{StaticResource CaptionButton}" Width="24" Height="24" ToolTip="Accept"
+                                                    Command="{Binding AcceptCommand}">
+                                                <Path Data="{StaticResource IconCheck}" Stroke="{DynamicResource SuccessBrush}"
+                                                      StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                                      StrokeLineJoin="Round" Stretch="Uniform" Width="10" Height="10"/>
+                                            </Button>
+                                            <Button Style="{StaticResource CaptionButton}" Width="24" Height="24" ToolTip="Decline"
+                                                    Command="{Binding DeclineCommand}">
+                                                <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource DangerBrush}"
+                                                      StrokeThickness="1.7" Stretch="Uniform" Width="9" Height="9"/>
+                                            </Button>
+                                        </StackPanel>
                                     </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>

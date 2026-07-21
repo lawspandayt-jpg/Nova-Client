@@ -41,12 +41,12 @@ public sealed class VersionsViewModel : ViewModelBase
 
     public ObservableCollection<VersionTile> Tiles { get; } = new();
 
-    // Original per-version gradient hues (top, bottom).
+    // Unified Nova palette: subtle purple/indigo variations that match the launcher theme.
     private static readonly (string Top, string Bottom)[] Palette =
     {
-        ("#3B2D6E", "#151226"), ("#1F4B6E", "#0E1826"), ("#1E5E52", "#0C1F1B"),
-        ("#5E2D6E", "#1D0F26"), ("#6E4A1F", "#261A0C"), ("#2D4A6E", "#0F1826"),
-        ("#6E2D3A", "#260F14"), ("#2D6E3E", "#0F2615"), ("#44506E", "#131826"),
+        ("#3A2F6B", "#141223"), ("#332B5E", "#131120"), ("#2C2751", "#12101D"),
+        ("#3E2F70", "#151324"), ("#2F2A57", "#12111E"), ("#372D64", "#141221"),
+        ("#2A2549", "#11101B"), ("#413175", "#161325"), ("#2D2850", "#12111D"),
     };
 
     public VersionsViewModel(MainViewModel main)

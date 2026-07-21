@@ -89,7 +89,9 @@ public sealed class HomeViewModel : ViewModelBase
     {
         public required string Uuid { get; init; }
         public required string Name { get; init; }
-        public required RelayCommand RemoveCommand { get; init; }
+        public RelayCommand? RemoveCommand { get; init; }
+        public RelayCommand? AcceptCommand { get; init; }
+        public RelayCommand? DeclineCommand { get; init; }
 
         private System.Windows.Media.Imaging.BitmapSource? _head;
         public System.Windows.Media.Imaging.BitmapSource? Head { get => _head; set => Set(ref _head, value); }
@@ -97,8 +99,19 @@ public sealed class HomeViewModel : ViewModelBase
         private bool _online;
         public bool Online { get => _online; set => Set(ref _online, value); }
 
-        private string _status = "Added";
-        public string Status { get => _status; set => Set(ref _status, value); }
+        // "online" | "offline" | "pending" | "incoming"
+        private string _kind = "offline";
+        public string Kind { get => _kind; set { if (Set(ref _kind, value)) { OnPropertyChanged(nameof(IsIncoming)); OnPropertyChanged(nameof(Status)); } } }
+
+        public bool IsIncoming => Kind == "incoming";
+
+        public string Status => Kind switch
+        {
+            "online" => "Online",
+            "pending" => "Request sent · pending",
+            "incoming" => "Wants to be your friend",
+            _ => "Offline"
+        };
     }
 
     public ObservableCollection<FriendItem> Friends { get; } = new();
@@ -120,17 +133,96 @@ public sealed class HomeViewModel : ViewModelBase
     private async Task LoadFriendsAsync()
     {
         PresenceEnabled = _services.Presence.Enabled;
+        OnPropertyChanged(nameof(FriendsHeader));
+        if (PresenceEnabled) await RefreshBackendFriendsAsync();
+        else await LoadLocalFriendsAsync();
+    }
+
+    // ---------- backend (real requests + presence) ----------
+    private async Task RefreshBackendFriendsAsync()
+    {
+        var session = _services.Auth.Session;
+        if (session is null) return;
+        var me = session.Profile.Uuid;
+
+        _ = _services.Presence.HeartbeatAsync(me, session.Profile.Name);
+        var accepted = await _services.Presence.GetFriendsAsync(me);
+        var pending = await _services.Presence.GetOutboxAsync(me);
+        var incoming = await _services.Presence.GetInboxAsync(me);
+        var online = await _services.Presence.GetOnlineAsync(accepted.Select(f => f.Uuid));
+
         await Application.Current.Dispatcher.InvokeAsync(() =>
         {
             Friends.Clear();
-            foreach (var friend in _services.Friends.Friends) Friends.Add(BuildFriendItem(friend));
+            foreach (var req in incoming) Friends.Add(BuildIncoming(req));
+            foreach (var friend in accepted)
+            {
+                var item = BuildAccepted(friend.Uuid, friend.Name);
+                item.Online = online.Contains(friend.Uuid);
+                item.Kind = item.Online ? "online" : "offline";
+                Friends.Add(item);
+            }
+            foreach (var p in pending) Friends.Add(BuildPending(p.Uuid, p.Name));
+            OnPropertyChanged(nameof(OnlineFriendCount));
+            OnPropertyChanged(nameof(FriendsHeader));
         });
-        _ = LoadFriendHeadsAsync();
-        _ = RefreshPresenceAsync();
+        _ = LoadHeadsAsync();
+    }
+
+    private FriendItem BuildAccepted(string uuid, string name) => new()
+    {
+        Uuid = uuid,
+        Name = name,
+        RemoveCommand = new RelayCommand(async () =>
+        {
+            // Removing locally hides them; the backend keeps the edge until both sides re-sync.
+            var existing = Friends.FirstOrDefault(f => f.Uuid == uuid);
+            if (existing is not null) Friends.Remove(existing);
+            await Task.CompletedTask;
+        })
+    };
+
+    private FriendItem BuildPending(string uuid, string name)
+    {
+        var item = BuildAccepted(uuid, name);
+        item.Kind = "pending";
+        return item;
+    }
+
+    private FriendItem BuildIncoming(IncomingRequest req)
+    {
+        var item = new FriendItem
+        {
+            Uuid = req.FromUuid,
+            Name = req.FromName,
+            AcceptCommand = new RelayCommand(async () =>
+            {
+                await _services.Presence.RespondAsync(_services.Auth.Session!.Profile.Uuid, req.FromUuid, accept: true);
+                await RefreshBackendFriendsAsync();
+            }),
+            DeclineCommand = new RelayCommand(async () =>
+            {
+                await _services.Presence.RespondAsync(_services.Auth.Session!.Profile.Uuid, req.FromUuid, accept: false);
+                await RefreshBackendFriendsAsync();
+            })
+        };
+        item.Kind = "incoming";
+        return item;
+    }
+
+    // ---------- local-only (no backend configured) ----------
+    private async Task LoadLocalFriendsAsync()
+    {
+        await Application.Current.Dispatcher.InvokeAsync(() =>
+        {
+            Friends.Clear();
+            foreach (var friend in _services.Friends.Friends) Friends.Add(BuildLocal(friend));
+        });
+        _ = LoadHeadsAsync();
         OnPropertyChanged(nameof(FriendsHeader));
     }
 
-    private FriendItem BuildFriendItem(Services.Friend friend)
+    private FriendItem BuildLocal(Services.Friend friend)
     {
         var uuid = friend.Uuid;
         return new FriendItem
@@ -147,18 +239,23 @@ public sealed class HomeViewModel : ViewModelBase
         };
     }
 
-    private async Task LoadFriendHeadsAsync()
+    private async Task LoadHeadsAsync()
     {
-        foreach (var friend in _services.Friends.Friends.ToList())
+        foreach (var item in Friends.ToList())
         {
-            var item = Friends.FirstOrDefault(f => f.Uuid == friend.Uuid);
-            if (item is null || string.IsNullOrEmpty(friend.SkinUrl)) continue;
+            if (item.Head is not null) continue;
             try
             {
-                var bytes = await Core.Http.HttpProvider.Client.GetByteArrayAsync(friend.SkinUrl);
-                var cache = Path.Combine(_services.Paths.Cache, "skins", friend.Uuid + ".png");
-                Directory.CreateDirectory(Path.GetDirectoryName(cache)!);
-                await File.WriteAllBytesAsync(cache, bytes);
+                var cache = Path.Combine(_services.Paths.Cache, "skins", item.Uuid + ".png");
+                if (!File.Exists(cache))
+                {
+                    // Fetch head via Mojang session profile → skin URL.
+                    var skinUrl = await ResolveSkinUrlAsync(item.Uuid);
+                    if (skinUrl is null) continue;
+                    var bytes = await Core.Http.HttpProvider.Client.GetByteArrayAsync(skinUrl);
+                    Directory.CreateDirectory(Path.GetDirectoryName(cache)!);
+                    await File.WriteAllBytesAsync(cache, bytes);
+                }
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     var skin = SkinImaging.LoadSkin(cache);
@@ -169,23 +266,24 @@ public sealed class HomeViewModel : ViewModelBase
         }
     }
 
-    private async Task RefreshPresenceAsync()
+    private static async Task<string?> ResolveSkinUrlAsync(string uuid)
     {
-        if (!_services.Presence.Enabled) return;
-        var session = _services.Auth.Session;
-        if (session is not null)
-            _ = _services.Presence.HeartbeatAsync(session.Profile.Uuid, session.Profile.Name);
-        var online = await _services.Presence.GetOnlineAsync(Friends.Select(f => f.Uuid));
-        await Application.Current.Dispatcher.InvokeAsync(() =>
+        try
         {
-            foreach (var friend in Friends)
+            var json = await Core.Http.HttpProvider.Client.GetStringAsync(
+                "https://sessionserver.mojang.com/session/minecraft/profile/" + uuid);
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            foreach (var prop in doc.RootElement.GetProperty("properties").EnumerateArray())
             {
-                friend.Online = online.Contains(friend.Uuid);
-                friend.Status = friend.Online ? "Online" : "Offline";
+                if (prop.GetProperty("name").GetString() != "textures") continue;
+                var decoded = Convert.FromBase64String(prop.GetProperty("value").GetString()!);
+                using var tex = System.Text.Json.JsonDocument.Parse(decoded);
+                if (tex.RootElement.GetProperty("textures").TryGetProperty("SKIN", out var skin))
+                    return skin.GetProperty("url").GetString();
             }
-            OnPropertyChanged(nameof(OnlineFriendCount));
-            OnPropertyChanged(nameof(FriendsHeader));
-        });
+        }
+        catch { }
+        return null;
     }
 
     private async Task AddFriendAsync()
@@ -193,19 +291,45 @@ public sealed class HomeViewModel : ViewModelBase
         FriendError = "";
         var name = AddFriendName.Trim();
         if (name.Length == 0) return;
+
+        if (PresenceEnabled)
+        {
+            var session = _services.Auth.Session!;
+            var result = await _services.Presence.SendRequestAsync(session.Profile.Uuid, session.Profile.Name, name);
+            switch (result.Status)
+            {
+                case "pending":
+                    AddFriendName = "";
+                    await RefreshBackendFriendsAsync();
+                    break;
+                case "accepted":
+                    AddFriendName = "";
+                    await RefreshBackendFriendsAsync();
+                    break;
+                case "already_friends":
+                    FriendError = $"{name} is already your friend.";
+                    break;
+                case "not_found":
+                    FriendError = result.Message.Length > 0 ? result.Message
+                        : $"{name} hasn't used Nova Client yet, so they can't get a request.";
+                    break;
+                default:
+                    FriendError = result.Message.Length > 0 ? result.Message : "Could not send the request.";
+                    break;
+            }
+            return;
+        }
+
+        // Local-only fallback: verify the name exists and store it.
         try
         {
             var friend = await _services.Friends.AddByNameAsync(name);
-            var item = BuildFriendItem(friend);
-            Friends.Add(item);
+            Friends.Add(BuildLocal(friend));
             AddFriendName = "";
             OnPropertyChanged(nameof(FriendsHeader));
-            _ = LoadFriendHeadsAsync();
+            _ = LoadHeadsAsync();
         }
-        catch (Exception ex)
-        {
-            FriendError = ex.Message;
-        }
+        catch (Exception ex) { FriendError = ex.Message; }
     }
 
     public ObservableCollection<string> RecentActivity { get; } = new();

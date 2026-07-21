@@ -103,6 +103,14 @@
                 </Border>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0">
+                <!-- Global online count -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0"
+                            Visibility="{Binding PresenceEnabled, Converter={StaticResource BoolToVisHeader}}">
+                    <Ellipse Width="8" Height="8" Fill="{DynamicResource SuccessBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding OnlineText}" FontSize="11.5" Margin="6,0,0,0" VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextDimBrush}" FontFamily="Segoe UI Semibold"/>
+                </StackPanel>
+
                 <!-- Account chip + dropdown menu -->
                 <Grid Margin="0,0,6,0" Visibility="{Binding IsSignedIn, Converter={StaticResource BoolToVisHeader}}">
                     <Button x:Name="AccountChip" Command="{Binding ToggleAccountMenuCommand}" Cursor="Hand" Height="32">

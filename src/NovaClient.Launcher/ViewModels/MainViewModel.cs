@@ -45,6 +45,31 @@ public sealed class MainViewModel : ViewModelBase
     public string LauncherTitle => Services.Branding.LauncherTitle;
     public string VersionText => $"v{Services.Branding.LauncherVersion}";
 
+    // ----- global online count (from the presence backend) -----
+    public bool PresenceEnabled => Services.Presence.Enabled;
+
+    private int _onlineCount;
+    public int OnlineCount { get => _onlineCount; private set { if (Set(ref _onlineCount, value)) OnPropertyChanged(nameof(OnlineText)); } }
+    public string OnlineText => $"{OnlineCount:N0} Online";
+
+    private System.Windows.Threading.DispatcherTimer? _presenceTimer;
+
+    private void StartPresenceLoop()
+    {
+        if (!Services.Presence.Enabled) return;
+        async void Tick()
+        {
+            var session = Services.Auth.Session;
+            if (session is not null)
+                await Services.Presence.HeartbeatAsync(session.Profile.Uuid, session.Profile.Name);
+            OnlineCount = await Services.Presence.GetOnlineCountAsync();
+        }
+        _presenceTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(45) };
+        _presenceTimer.Tick += (_, _) => Tick();
+        _presenceTimer.Start();
+        Tick(); // immediate first update
+    }
+
     // ----- header account menu -----
     public bool IsSignedIn => Services.Auth.Session is not null;
     public string CurrentUsername => Services.Auth.Session?.Profile.Name ?? "";
@@ -134,6 +159,7 @@ public sealed class MainViewModel : ViewModelBase
         });
 
         ShowLogin(restoreSession: true);
+        StartPresenceLoop();
     }
 
     /// <summary>Refreshes the header account chip + switch menu; called whenever the session changes.</summary>
