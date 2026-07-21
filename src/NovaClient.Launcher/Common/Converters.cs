@@ -38,6 +38,19 @@ public sealed class StringToVisibilityConverter : IValueConverter
         throw new NotSupportedException();
 }
 
+/// <summary>Highlights the active sidebar page: returns a faint accent brush when the bound
+/// ActivePage string equals the converter parameter, transparent otherwise.</summary>
+public sealed class ActivePageBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        string.Equals(value as string, parameter as string, StringComparison.Ordinal)
+            ? new SolidColorBrush(Color.FromArgb(0x2E, 0x7C, 0x5C, 0xFF))
+            : Brushes.Transparent;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
 /// <summary>Green/red status dot brush from a bool.</summary>
 public sealed class BoolToStatusBrushConverter : IValueConverter
 {

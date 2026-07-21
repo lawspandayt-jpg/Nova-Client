@@ -2,10 +2,10 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- Palette (accent is replaced at runtime from branding.json) -->
-    <Color x:Key="BgColor">#0E1015</Color>
-    <Color x:Key="PanelColor">#171A21</Color>
-    <Color x:Key="Panel2Color">#1D212B</Color>
-    <Color x:Key="BorderColor">#262B36</Color>
+    <Color x:Key="BgColor">#0A0B0E</Color>
+    <Color x:Key="PanelColor">#14161C</Color>
+    <Color x:Key="Panel2Color">#1D2029</Color>
+    <Color x:Key="BorderColor">#232733</Color>
     <Color x:Key="TextColor">#E9EBF1</Color>
     <Color x:Key="TextDimColor">#9AA1B0</Color>
     <Color x:Key="AccentColor">#7C5CFF</Color>
@@ -232,10 +232,14 @@
         <Setter Property="Margin" Value="0,0,0,10"/>
     </Style>
 
-    <!-- Sidebar icon button -->
+    <Color x:Key="WarningColor">#E5A94B</Color>
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}"/>
+    <SolidColorBrush x:Key="AccentFaintBrush" Color="#2E7C5CFF"/>
+
+    <!-- Sidebar icon button (labelled) -->
     <Style x:Key="SidebarButton" TargetType="Button">
-        <Setter Property="Width" Value="44"/>
-        <Setter Property="Height" Value="44"/>
+        <Setter Property="Width" Value="62"/>
+        <Setter Property="Height" Value="52"/>
         <Setter Property="Margin" Value="0,4"/>
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>

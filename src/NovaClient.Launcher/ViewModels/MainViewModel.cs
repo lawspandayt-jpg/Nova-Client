@@ -11,7 +11,23 @@ public sealed class MainViewModel : ViewModelBase
     public AppServices Services { get; }
 
     private ViewModelBase? _current;
-    public ViewModelBase? Current { get => _current; private set => Set(ref _current, value); }
+    public ViewModelBase? Current
+    {
+        get => _current;
+        private set
+        {
+            (_current as HomeViewModel)?.Detach();
+            Set(ref _current, value);
+        }
+    }
+
+    private string _activePage = "Home";
+    public string ActivePage { get => _activePage; private set => Set(ref _activePage, value); }
+
+    public string SelectedVersionText => Services.Settings.Current.SelectedVersion;
+
+    public RelayCommand NavModsCommand { get; private set; } = null!;
+    public RelayCommand NavServersCommand { get; private set; } = null!;
 
     public string LauncherTitle => Services.Branding.LauncherTitle;
     public string VersionText => $"v{Services.Branding.LauncherVersion}";
@@ -37,6 +53,10 @@ public sealed class MainViewModel : ViewModelBase
             if (Services.Auth.Session is not null) ShowVersions();
         });
         NavSettingsCommand = new RelayCommand(ShowSettings);
+        NavModsCommand = new RelayCommand(() => ShowComingSoon("Mods",
+            "Browse and manage Fabric mods for modern versions right from the launcher."));
+        NavServersCommand = new RelayCommand(() => ShowComingSoon("Servers",
+            "Save favorite servers and jump straight into them."));
         NavOptiFineCommand = new RelayCommand(() =>
         {
             if (Services.Auth.Session is not null) ShowOptiFineSetup();
@@ -58,6 +78,7 @@ public sealed class MainViewModel : ViewModelBase
     {
         var vm = new LoginViewModel(this);
         Current = vm;
+        ActivePage = "Home";
         if (restoreSession) _ = vm.TryRestoreSessionAsync();
     }
 
@@ -65,14 +86,34 @@ public sealed class MainViewModel : ViewModelBase
     {
         var vm = new HomeViewModel(this);
         Current = vm;
+        ActivePage = "Home";
+        OnPropertyChanged(nameof(SelectedVersionText));
         _ = vm.LoadAsync();
     }
 
-    public void ShowSettings() => Current = new SettingsViewModel(this);
+    public void ShowSettings()
+    {
+        Current = new SettingsViewModel(this);
+        ActivePage = "Settings";
+    }
 
-    public void ShowVersions() => Current = new VersionsViewModel(this);
+    public void ShowVersions()
+    {
+        Current = new VersionsViewModel(this);
+        ActivePage = "Versions";
+    }
 
-    public void ShowOptiFineSetup() => Current = new OptiFineViewModel(this);
+    public void ShowOptiFineSetup()
+    {
+        Current = new OptiFineViewModel(this);
+        ActivePage = "Home";
+    }
+
+    public void ShowComingSoon(string title, string description)
+    {
+        Current = new ComingSoonViewModel(title, description);
+        ActivePage = title;
+    }
 
     public void SignOut(bool keepRememberedEmail)
     {

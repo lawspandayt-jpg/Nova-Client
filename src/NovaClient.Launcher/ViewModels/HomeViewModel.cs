@@ -36,7 +36,26 @@ public sealed class HomeViewModel : ViewModelBase
 
     // ----- install/launch state -----
     private string _statusText = "Preparing…";
-    public string StatusText { get => _statusText; set => Set(ref _statusText, value); }
+    public string StatusText
+    {
+        get => _statusText;
+        set { if (Set(ref _statusText, value)) OnPropertyChanged(nameof(LaunchButtonText)); }
+    }
+
+    /// <summary>The launch button doubles as the stage indicator while busy.</summary>
+    public string LaunchButtonText => IsBusy || GameRunning ? StatusText : "LAUNCH GAME";
+
+    public string RamText => $"{Core.Settings.RamValidator.Clamp(_services.Settings.Current.RamMb)} MB RAM";
+
+    private bool _accountMenuOpen;
+    public bool AccountMenuOpen { get => _accountMenuOpen; set => Set(ref _accountMenuOpen, value); }
+
+    public ObservableCollection<string> RecentActivity { get; } = new();
+    private readonly Action<Core.Logging.LogEntry> _activityHandler;
+
+    public RelayCommand OpenLogsCommand { get; }
+    public RelayCommand CopyErrorCommand { get; }
+    public RelayCommand ToggleAccountMenuCommand { get; }
 
     private string _speedText = "";
     public string SpeedText { get => _speedText; set => Set(ref _speedText, value); }
@@ -48,10 +67,18 @@ public sealed class HomeViewModel : ViewModelBase
     public bool ProgressVisible { get => _progressVisible; set => Set(ref _progressVisible, value); }
 
     private bool _isBusy;
-    public bool IsBusy { get => _isBusy; set => Set(ref _isBusy, value); }
+    public bool IsBusy
+    {
+        get => _isBusy;
+        set { if (Set(ref _isBusy, value)) OnPropertyChanged(nameof(LaunchButtonText)); }
+    }
 
     private bool _gameRunning;
-    public bool GameRunning { get => _gameRunning; set => Set(ref _gameRunning, value); }
+    public bool GameRunning
+    {
+        get => _gameRunning;
+        set { if (Set(ref _gameRunning, value)) OnPropertyChanged(nameof(LaunchButtonText)); }
+    }
 
     private string _javaStatus = "Detecting Java…";
     public string JavaStatus { get => _javaStatus; set => Set(ref _javaStatus, value); }
@@ -149,6 +176,30 @@ public sealed class HomeViewModel : ViewModelBase
         InstallJavaCommand = new AsyncRelayCommand(InstallJavaAsync, () => !IsBusy && !JavaOk);
         SettingsCommand = new RelayCommand(main.ShowSettings);
         ChangeVersionCommand = new RelayCommand(main.ShowVersions);
+        OpenLogsCommand = new RelayCommand(() =>
+        {
+            Directory.CreateDirectory(_services.Paths.Logs);
+            System.Diagnostics.Process.Start(
+                new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{_services.Paths.Logs}\"") { UseShellExecute = true });
+        });
+        CopyErrorCommand = new RelayCommand(() =>
+        {
+            if (!string.IsNullOrEmpty(CrashText)) Clipboard.SetText(CrashText);
+        });
+        ToggleAccountMenuCommand = new RelayCommand(() => AccountMenuOpen = !AccountMenuOpen);
+
+        // Recent activity: mirror meaningful launcher events (redacted upstream by NovaLog).
+        var interesting = new HashSet<string> { "Auth", "Game", "Launcher", "Install", "OptiFine", "Java", "Updater", "Fabric", "App" };
+        _activityHandler = entry =>
+        {
+            if (entry.Level != Core.Logging.LogLevel.Info || !interesting.Contains(entry.Component)) return;
+            Application.Current?.Dispatcher.BeginInvoke(() =>
+            {
+                RecentActivity.Insert(0, $"{entry.Time:HH:mm}  {entry.Message}");
+                while (RecentActivity.Count > 7) RecentActivity.RemoveAt(RecentActivity.Count - 1);
+            });
+        };
+        Core.Logging.NovaLog.EntryLogged += _activityHandler;
         OptiFineCommand = new RelayCommand(main.ShowOptiFineSetup);
         SignOutCommand = new RelayCommand(() => main.SignOut(keepRememberedEmail: _services.Settings.Current.RememberEmail));
         SwitchAccountCommand = new RelayCommand(SwitchAccount);
@@ -450,6 +501,9 @@ public sealed class HomeViewModel : ViewModelBase
             UpdateText = "Update check unavailable.";
         }
     }
+
+    /// <summary>Called when navigating away so log-event subscriptions don't accumulate.</summary>
+    public void Detach() => Core.Logging.NovaLog.EntryLogged -= _activityHandler;
 
     private void SwitchAccount()
     {

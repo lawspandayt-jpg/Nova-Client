@@ -3,14 +3,16 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:NovaClient.Launcher.ViewModels"
         xmlns:views="clr-namespace:NovaClient.Launcher.Views"
+        xmlns:common="clr-namespace:NovaClient.Launcher.Common"
         Title="{Binding LauncherTitle}"
         Icon="Assets/logo.png"
-        Width="980" Height="640" MinWidth="820" MinHeight="560"
+        Width="1010" Height="660" MinWidth="900" MinHeight="600"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None" ResizeMode="CanResizeWithGrip"
         Background="{DynamicResource BgBrush}">
 
     <Window.Resources>
+        <common:ActivePageBrushConverter x:Key="ActivePage"/>
         <DataTemplate DataType="{x:Type vm:LoginViewModel}">
             <views:LoginView/>
         </DataTemplate>
@@ -26,28 +28,71 @@
         <DataTemplate DataType="{x:Type vm:VersionsViewModel}">
             <views:VersionsView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ComingSoonViewModel}">
+            <views:ComingSoonView/>
+        </DataTemplate>
+
+        <!-- Labelled sidebar navigation item -->
+        <Style x:Key="NavItem" TargetType="Button">
+            <Setter Property="Width" Value="66"/>
+            <Setter Property="Height" Value="56"/>
+            <Setter Property="Margin" Value="0,3"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="10">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Panel2Brush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="NavLabel" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+            <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+        </Style>
     </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="44"/>
+            <RowDefinition Height="46"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="60"/>
+            <ColumnDefinition Width="78"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Custom title bar (double-click maximizes) -->
+        <!-- Header (drag + double-click maximize) -->
         <Grid Grid.Row="0" Grid.ColumnSpan="2" Background="Transparent"
               MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
             <StackPanel Orientation="Horizontal" Margin="16,0" VerticalAlignment="Center">
-                <Path Width="18" Height="18" Stretch="Uniform" Fill="{DynamicResource AccentBrush}"
+                <Path Width="17" Height="17" Stretch="Uniform" Fill="{DynamicResource AccentBrush}"
                       Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z"/>
                 <TextBlock Text="{Binding LauncherTitle}" Margin="10,0,0,0" VerticalAlignment="Center"
-                           FontFamily="Segoe UI Semibold" FontSize="14"/>
-                <TextBlock Text="{Binding VersionText}" Margin="8,1,0,0" VerticalAlignment="Center"
-                           FontSize="11" Foreground="{DynamicResource TextDimBrush}"/>
+                           FontFamily="Segoe UI Semibold" FontSize="13.5"/>
+                <TextBlock Text="{Binding VersionText}" Margin="7,1,0,0" VerticalAlignment="Center"
+                           FontSize="10.5" Foreground="{DynamicResource TextDimBrush}"/>
+                <Border Background="{DynamicResource Panel2Brush}" CornerRadius="6" Padding="8,3"
+                        Margin="14,0,0,0" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Minecraft" FontSize="10" Foreground="{DynamicResource TextDimBrush}"/>
+                        <TextBlock Text="{Binding SelectedVersionText}" FontSize="10" Margin="5,0,0,0"
+                                   FontFamily="Segoe UI Semibold" Foreground="{DynamicResource AccentBrush}"/>
+                    </StackPanel>
+                </Border>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0">
                 <Button Style="{StaticResource CaptionButton}" Click="Minimize_Click" ToolTip="Minimize">
@@ -66,35 +111,66 @@
             </StackPanel>
         </Grid>
 
-        <!-- Sidebar tabs -->
+        <!-- Sidebar -->
         <Border Grid.Row="1" Grid.Column="0" Background="{DynamicResource PanelBrush}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
             <Grid>
                 <StackPanel HorizontalAlignment="Center" Margin="0,10,0,0">
-                    <Button Style="{StaticResource SidebarButton}" ToolTip="Play" Command="{Binding NavPlayCommand}">
-                        <Path Data="{StaticResource IconPlay}" Stretch="Uniform" Width="15" Height="15"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    <Button Style="{StaticResource NavItem}" ToolTip="Home" Command="{Binding NavPlayCommand}"
+                            Background="{Binding ActivePage, Converter={StaticResource ActivePage}, ConverterParameter=Home}">
+                        <StackPanel>
+                            <Path Data="{StaticResource IconPlay}" Stretch="Uniform" Width="14" Height="14"
+                                  HorizontalAlignment="Center"
+                                  Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                            <TextBlock Text="Home" Style="{StaticResource NavLabel}"/>
+                        </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource SidebarButton}" ToolTip="Versions" Command="{Binding NavVersionsCommand}">
-                        <Path Data="{StaticResource IconGrid}" Stretch="Uniform" Width="15" Height="15" StrokeThickness="1.6"
-                              StrokeLineJoin="Round"
-                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    <Button Style="{StaticResource NavItem}" ToolTip="Versions" Command="{Binding NavVersionsCommand}"
+                            Background="{Binding ActivePage, Converter={StaticResource ActivePage}, ConverterParameter=Versions}">
+                        <StackPanel>
+                            <Path Data="{StaticResource IconGrid}" Stretch="Uniform" Width="14" Height="14" StrokeThickness="1.6"
+                                  StrokeLineJoin="Round" HorizontalAlignment="Center"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                            <TextBlock Text="Versions" Style="{StaticResource NavLabel}"/>
+                        </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource SidebarButton}" ToolTip="Game Folder" Command="{Binding OpenFolderCommand}">
-                        <Path Data="{StaticResource IconFolder}" Stretch="Uniform" Width="16" Height="14" StrokeThickness="1.6"
-                              StrokeLineJoin="Round"
-                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    <Button Style="{StaticResource NavItem}" ToolTip="Mods" Command="{Binding NavModsCommand}"
+                            Background="{Binding ActivePage, Converter={StaticResource ActivePage}, ConverterParameter=Mods}">
+                        <StackPanel>
+                            <Path Data="{StaticResource IconCube}" Stretch="Uniform" Width="15" Height="15" StrokeThickness="1.6"
+                                  StrokeLineJoin="Round" HorizontalAlignment="Center"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                            <TextBlock Text="Mods" Style="{StaticResource NavLabel}"/>
+                        </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource SidebarButton}" ToolTip="Website" Command="{Binding OpenWebsiteCommand}">
-                        <Path Data="{StaticResource IconGlobe}" Stretch="Uniform" Width="16" Height="16" StrokeThickness="1.4"
-                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    <Button Style="{StaticResource NavItem}" ToolTip="Servers" Command="{Binding NavServersCommand}"
+                            Background="{Binding ActivePage, Converter={StaticResource ActivePage}, ConverterParameter=Servers}">
+                        <StackPanel>
+                            <Path Data="{StaticResource IconGlobe}" Stretch="Uniform" Width="15" Height="15" StrokeThickness="1.4"
+                                  HorizontalAlignment="Center"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                            <TextBlock Text="Servers" Style="{StaticResource NavLabel}"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavItem}" ToolTip="Open the Nova Client game folder"
+                            Command="{Binding OpenFolderCommand}">
+                        <StackPanel>
+                            <Path Data="{StaticResource IconFolder}" Stretch="Uniform" Width="15" Height="13" StrokeThickness="1.6"
+                                  StrokeLineJoin="Round" HorizontalAlignment="Center"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                            <TextBlock Text="Folder" Style="{StaticResource NavLabel}"/>
+                        </StackPanel>
                     </Button>
                 </StackPanel>
-                <Button Style="{StaticResource SidebarButton}" ToolTip="Settings" Command="{Binding NavSettingsCommand}"
-                        VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,12">
-                    <Path Data="{StaticResource IconGear}" Stretch="Uniform" Width="15" Height="15" StrokeThickness="1.6"
-                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                <Button Style="{StaticResource NavItem}" ToolTip="Settings" Command="{Binding NavSettingsCommand}"
+                        VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,10"
+                        Background="{Binding ActivePage, Converter={StaticResource ActivePage}, ConverterParameter=Settings}">
+                    <StackPanel>
+                        <Path Data="{StaticResource IconGear}" Stretch="Uniform" Width="14" Height="14" StrokeThickness="1.6"
+                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" HorizontalAlignment="Center"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                        <TextBlock Text="Settings" Style="{StaticResource NavLabel}"/>
+                    </StackPanel>
                 </Button>
             </Grid>
         </Border>
