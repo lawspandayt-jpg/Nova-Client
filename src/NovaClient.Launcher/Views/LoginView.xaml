@@ -14,8 +14,8 @@
                 Effect="{StaticResource PanelShadow}" Padding="36">
             <StackPanel>
                 <!-- Logo + name -->
-                <Path Width="44" Height="44" Stretch="Uniform" Fill="{DynamicResource AccentBrush}"
-                      Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z" HorizontalAlignment="Center"/>
+                <Image Source="/Assets/logo.png" Width="58" Height="58" HorizontalAlignment="Center"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
                 <TextBlock Text="{Binding ClientName}" FontSize="26" FontFamily="Segoe UI Semibold"
                            HorizontalAlignment="Center" Margin="0,14,0,2"/>
                 <TextBlock Text="{Binding VersionText}" FontSize="11" Foreground="{DynamicResource TextDimBrush}"

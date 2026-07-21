@@ -81,11 +81,12 @@
         <!-- Header (drag + double-click maximize) -->
         <Grid Grid.Row="0" Grid.ColumnSpan="2" Background="Transparent"
               MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-            <StackPanel Orientation="Horizontal" Margin="16,0" VerticalAlignment="Center">
-                <Path Width="17" Height="17" Stretch="Uniform" Fill="{DynamicResource AccentBrush}"
-                      Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z"/>
-                <TextBlock Text="{Binding LauncherTitle}" Margin="10,0,0,0" VerticalAlignment="Center"
-                           FontFamily="Segoe UI Semibold" FontSize="13.5"/>
+            <StackPanel Orientation="Horizontal" Margin="14,0" VerticalAlignment="Center">
+                <Image Source="Assets/logo.png" Width="22" Height="22" RenderOptions.BitmapScalingMode="HighQuality"/>
+                <TextBlock Margin="9,0,0,0" VerticalAlignment="Center" FontSize="13.5">
+                    <Run Text="Nova" FontFamily="Segoe UI Black"/><Run Text=" Client" FontFamily="Segoe UI Semibold"
+                         Foreground="{DynamicResource AccentBrush}"/>
+                </TextBlock>
                 <TextBlock Text="{Binding VersionText}" Margin="7,1,0,0" VerticalAlignment="Center"
                            FontSize="10.5" Foreground="{DynamicResource TextDimBrush}"/>
                 <Border Background="{DynamicResource Panel2Brush}" CornerRadius="6" Padding="8,3"
