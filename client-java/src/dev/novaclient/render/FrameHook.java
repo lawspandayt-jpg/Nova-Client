@@ -18,11 +18,54 @@ public final class FrameHook {
     private FrameHook() {
     }
 
+    /** Replaces the 1.8.9 window/taskbar icon with the Nova logo (bundled in the jar). */
+    private static void applyWindowIcon() {
+        try
+        {
+            java.io.InputStream stream = FrameHook.class.getResourceAsStream("/dev/novaclient/logo.png");
+            if (stream == null) return;
+            java.awt.image.BufferedImage source = javax.imageio.ImageIO.read(stream);
+            stream.close();
+            if (source == null) return;
+            Display.setIcon(new java.nio.ByteBuffer[] { toRgba(source, 16), toRgba(source, 32) });
+        }
+        catch (Throwable ignored)
+        {
+            // Icon is cosmetic — never let it break the game.
+        }
+    }
+
+    private static java.nio.ByteBuffer toRgba(java.awt.image.BufferedImage source, int size)
+    {
+        java.awt.image.BufferedImage scaled =
+                new java.awt.image.BufferedImage(size, size, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        java.awt.Graphics2D g = scaled.createGraphics();
+        g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.drawImage(source, 0, 0, size, size, null);
+        g.dispose();
+        java.nio.ByteBuffer buffer = org.lwjgl.BufferUtils.createByteBuffer(size * size * 4);
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                int pixel = scaled.getRGB(x, y);
+                buffer.put((byte) ((pixel >> 16) & 0xFF));
+                buffer.put((byte) ((pixel >> 8) & 0xFF));
+                buffer.put((byte) (pixel & 0xFF));
+                buffer.put((byte) ((pixel >>> 24) & 0xFF));
+            }
+        }
+        buffer.flip();
+        return buffer;
+    }
+
     public static void onFrame() {
         if (failed || !Display.isCreated()) return;
         try {
             if (!initialized) {
                 NovaClient.getInstance().initOnRenderThread();
+                applyWindowIcon();
                 initialized = true;
             }
 

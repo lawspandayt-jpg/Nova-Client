@@ -66,6 +66,11 @@ public sealed class NovaLauncher
         var vanilla = await _installer.InstallAsync(progress, ct);
         var isNova = versionId == MinecraftInstaller.VanillaVersion;
 
+        // The agent jar is used on every version (title/icon branding), so deploy it up front.
+        var agentJarPresent = _versionService.DeployNovaClientJar(
+            Path.Combine(_paths.ClientFiles, "nova-client.jar"),
+            Path.Combine(AppContext.BaseDirectory, "client", "nova-client.jar"));
+
         if (isNova)
         {
             progress?.Report(new InstallPhase("Preparing Nova bootstrap…", null));
@@ -74,12 +79,9 @@ public sealed class NovaLauncher
                 : new Progress<DownloadProgress>(p => progress.Report(new InstallPhase("Downloading bootstrap libraries…", p)));
             await _versionService.EnsureBootstrapLibrariesAsync(bootstrapProgress, ct);
 
-            var jarPresent = _versionService.DeployNovaClientJar(
-                Path.Combine(_paths.ClientFiles, "nova-client.jar"),
-                Path.Combine(AppContext.BaseDirectory, "client", "nova-client.jar"));
             var optifine = _optiFine.DetectInstalled();
             var child = _versionService.WriteVersionJson(vanilla, optifine);
-            return new PrepareResult(LaunchArgumentBuilder.Merge(vanilla, child), optifine, jarPresent,
+            return new PrepareResult(LaunchArgumentBuilder.Merge(vanilla, child), optifine, agentJarPresent,
                 versionId, IsNovaVersion: true, FabricLoaderVersion: null);
         }
 
@@ -119,17 +121,17 @@ public sealed class NovaLauncher
             settings.Fullscreen,
             settings.ExtraJvmArgs)
         {
-            // The Nova in-game client targets 1.8.9's engine (LWJGL 2) — never attach it elsewhere.
-            JavaAgentPath = prepared.IsNovaVersion ? _versionService.NovaClientLibraryPath : null,
-            SystemProperties = prepared.IsNovaVersion
-                ? new Dictionary<string, string>
-                {
-                    ["nova.dir"] = _paths.Root,
-                    ["nova.clientName"] = _clientName,
-                    ["nova.clientVersion"] = _clientVersion,
-                    ["nova.accentColor"] = _accentColor,
-                }
-                : null
+            // The agent attaches on every version: full Nova client (GUI) on 1.8.9, window-title
+            // and icon branding only elsewhere (it never touches game classes).
+            JavaAgentPath = File.Exists(_versionService.NovaClientLibraryPath) ? _versionService.NovaClientLibraryPath : null,
+            SystemProperties = new Dictionary<string, string>
+            {
+                ["nova.dir"] = _paths.Root,
+                ["nova.clientName"] = _clientName,
+                ["nova.clientVersion"] = _clientVersion,
+                ["nova.accentColor"] = _accentColor,
+                ["nova.mcVersion"] = prepared.VersionId,
+            }
         };
         _installer.VersionId = prepared.VersionId;
         var args = builder.Build(prepared.MergedVersion, options, _paths.Root);

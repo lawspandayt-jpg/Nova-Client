@@ -36,16 +36,24 @@ import java.util.Map;
  */
 public final class LwjglTransformer implements ClassFileTransformer {
 
-    private static final String BRIDGE = "dev/novaclient/input/InputBridge";
+    private static final String BRIDGE_PKG = "dev/novaclient/input/";
+    private static final String DEFAULT_OWNER = "InputBridge";
     private static final String SUFFIX = "$nova";
 
-    /** class internal name → (methodName + descriptor → bridge method name) */
+    /** class internal name → (methodName + descriptor → bridge, optionally "Owner#method") */
     private static final Map<String, Map<String, String>> TARGETS = new HashMap<String, Map<String, String>>();
 
     static {
         Map<String, String> display = new HashMap<String, String>();
         display.put("update()V", "displayUpdate");
+        display.put("setTitle(Ljava/lang/String;)V", "displaySetTitle");
         TARGETS.put("org/lwjgl/opengl/Display", display);
+
+        // Modern (LWJGL3) window-title branding — the only instrumentation applied to 1.13+.
+        Map<String, String> glfw = new HashMap<String, String>();
+        glfw.put("glfwCreateWindow(IILjava/lang/CharSequence;JJ)J", "GlfwBridge#glfwCreateWindow");
+        glfw.put("glfwSetWindowTitle(JLjava/lang/CharSequence;)V", "GlfwBridge#glfwSetWindowTitle");
+        TARGETS.put("org/lwjgl/glfw/GLFW", glfw);
 
         Map<String, String> keyboard = new HashMap<String, String>();
         keyboard.put("next()Z", "kbNext");
@@ -104,7 +112,14 @@ public final class LwjglTransformer implements ClassFileTransformer {
         for (Map.Entry<MethodNode, String> entry : renamed.entrySet()) {
             MethodNode original = entry.getKey();
             String publicName = entry.getValue();
-            String bridgeName = methods.get(publicName + original.desc);
+            String bridgeSpec = methods.get(publicName + original.desc);
+            String owner = DEFAULT_OWNER;
+            String bridgeName = bridgeSpec;
+            int hash = bridgeSpec.indexOf('#');
+            if (hash >= 0) {
+                owner = bridgeSpec.substring(0, hash);
+                bridgeName = bridgeSpec.substring(hash + 1);
+            }
 
             MethodNode wrapper = new MethodNode(
                     Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, publicName, original.desc, null, null);
@@ -115,7 +130,7 @@ public final class LwjglTransformer implements ClassFileTransformer {
                 body.add(new VarInsnNode(arg.getOpcode(Opcodes.ILOAD), slot));
                 slot += arg.getSize();
             }
-            body.add(new MethodInsnNode(Opcodes.INVOKESTATIC, BRIDGE, bridgeName, original.desc, false));
+            body.add(new MethodInsnNode(Opcodes.INVOKESTATIC, BRIDGE_PKG + owner, bridgeName, original.desc, false));
             body.add(new InsnNode(Type.getReturnType(original.desc).getOpcode(Opcodes.IRETURN)));
             wrapper.instructions = body;
             node.methods.add(wrapper);

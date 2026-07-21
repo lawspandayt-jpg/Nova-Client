@@ -41,6 +41,25 @@ Write-Host "Compiling $($sources.Count) sources with --release 8..."
 if ($LASTEXITCODE -ne 0) { throw "javac failed with exit code $LASTEXITCODE" }
 Remove-Item $sourceList
 
+# Bundle the Nova logo (used for the in-game window icon)
+$logo = Join-Path $root "..\src\NovaClient.Launcher\Assets\logo.png"
+if (Test-Path $logo) { Copy-Item $logo (Join-Path $outDir "dev\novaclient\logo.png") -Force }
+
+# Shade ASM into the agent jar so title branding works on modern versions too
+# (their classpath has no ASM; on 1.8.9/Fabric the classpath copy simply wins). BSD-3 licensed,
+# notice in docs/THIRD-PARTY-NOTICES.md.
+$asmJar = Get-ChildItem $libDir -Filter "asm-debug-all-*.jar" | Select-Object -First 1
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$zip = [System.IO.Compression.ZipFile]::OpenRead($asmJar.FullName)
+foreach ($entry in $zip.Entries) {
+    if ($entry.FullName.StartsWith("org/") -and $entry.FullName.EndsWith(".class")) {
+        $target = Join-Path $outDir ($entry.FullName -replace '/', '\')
+        New-Item -ItemType Directory -Force (Split-Path $target) | Out-Null
+        [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $target, $true)
+    }
+}
+$zip.Dispose()
+
 $manifest = Join-Path $outDir "MANIFEST.MF"
 @"
 Premain-Class: dev.novaclient.bootstrap.NovaAgent
@@ -52,7 +71,7 @@ Implementation-Version: 1.0.0
 
 $jarPath = Join-Path $distDir "nova-client.jar"
 if (Test-Path $jarPath) { Remove-Item $jarPath }
-& $jarTool cfm $jarPath $manifest -C $outDir dev
+& $jarTool cfm $jarPath $manifest -C $outDir dev -C $outDir org
 if ($LASTEXITCODE -ne 0) { throw "jar failed with exit code $LASTEXITCODE" }
 
 Write-Host "Built $jarPath"

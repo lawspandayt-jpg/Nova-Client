@@ -45,7 +45,7 @@ public final class InputBridge {
     private static MethodHandle MS_NEXT, MS_IS_BUTTON_DOWN, MS_EVENT_BUTTON, MS_EVENT_STATE,
             MS_EVENT_X, MS_EVENT_Y, MS_EVENT_DX, MS_EVENT_DY, MS_EVENT_DWHEEL,
             MS_DX, MS_DY, MS_DWHEEL, MS_IS_GRABBED, MS_SET_GRABBED;
-    private static MethodHandle DISPLAY_UPDATE;
+    private static MethodHandle DISPLAY_UPDATE, DISPLAY_SET_TITLE;
     private static boolean resolved;
 
     private static void ensureResolved() {
@@ -78,6 +78,7 @@ public final class InputBridge {
             MS_SET_GRABBED = lookup.findStatic(ms, "setGrabbed$nova", MethodType.methodType(void.class, boolean.class));
 
             DISPLAY_UPDATE = lookup.findStatic(dp, "update$nova", MethodType.methodType(void.class));
+            DISPLAY_SET_TITLE = lookup.findStatic(dp, "setTitle$nova", MethodType.methodType(void.class, String.class));
             resolved = true;
         } catch (Throwable t) {
             throw new IllegalStateException("[NovaClient] Could not bind instrumented LWJGL methods", t);
@@ -158,6 +159,16 @@ public final class InputBridge {
         }
         try {
             DISPLAY_UPDATE.invoke();
+        } catch (Throwable t) {
+            throw rethrow(t);
+        }
+    }
+
+    /** Rebrands the 1.8.9 window title ("Minecraft 1.8.9" → "Nova Client 1.8.9"). Cosmetic only. */
+    public static void displaySetTitle(String title) {
+        ensureResolved();
+        try {
+            DISPLAY_SET_TITLE.invoke(GlfwBridge.brand(title));
         } catch (Throwable t) {
             throw rethrow(t);
         }
