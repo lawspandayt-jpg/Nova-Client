@@ -43,7 +43,7 @@ public sealed class OptiFineViewModel : ViewModelBase
 
         BrowseCommand = new RelayCommand(Browse);
         InstallCommand = new RelayCommand(Install, () => CanInstall);
-        BackCommand = new RelayCommand(main.ShowHome);
+        BackCommand = new RelayCommand(() => main.ShowHome());
         OpenOptiFineSiteCommand = new RelayCommand(() =>
             Process.Start(new ProcessStartInfo("https://optifine.net/downloads") { UseShellExecute = true }));
     }
