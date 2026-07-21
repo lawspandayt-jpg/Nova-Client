@@ -4,8 +4,10 @@
              xmlns:common="clr-namespace:NovaClient.Launcher.Common">
     <UserControl.Resources>
         <common:BoolToVisibilityConverter x:Key="BoolToVis"/>
+        <common:BoolToVisibilityConverter x:Key="InvBoolToVis" Invert="True"/>
         <common:StringToVisibilityConverter x:Key="StrToVis"/>
         <common:BoolToStatusBrushConverter x:Key="StatusBrush"/>
+        <common:InverseBoolConverter x:Key="InvBool"/>
     </UserControl.Resources>
 
     <Grid Margin="24,8,24,24" Style="{StaticResource PageTransition}">
@@ -21,12 +23,11 @@
                 <TextBlock Text="Account" Style="{StaticResource SectionTitle}"/>
                 <StackPanel Orientation="Horizontal">
                     <Border CornerRadius="10" Width="72" Height="72" Background="{DynamicResource Panel2Brush}">
-                        <Image Source="{Binding HeadImage}" Width="64" Height="64"
-                               RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                        <Image Source="{Binding HeadImage}" Width="64" Height="64" UseLayoutRounding="True"
+                               SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                     </Border>
-                    <StackPanel Margin="14,4,0,0">
+                    <StackPanel Margin="14,10,0,0">
                         <TextBlock Text="{Binding Username}" FontSize="19" FontFamily="Segoe UI Semibold"/>
-                        <TextBlock Text="{Binding MaskedEmail}" FontSize="12" Foreground="{DynamicResource TextDimBrush}" Margin="0,3,0,0"/>
                         <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                             <Ellipse Width="8" Height="8" Fill="{Binding OwnershipOk, Converter={StaticResource StatusBrush}}" VerticalAlignment="Center"/>
                             <TextBlock Text="{Binding OwnershipText}" FontSize="11" Margin="6,0,0,0"
@@ -42,8 +43,9 @@
                 <!-- Skin preview -->
                 <Border Background="{DynamicResource Panel2Brush}" CornerRadius="10" Margin="0,16,0,0"
                         Padding="0,14" HorizontalAlignment="Stretch">
-                    <Image Source="{Binding SkinImage}" Height="180"
-                           RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                    <!-- Native bitmap is 96×192 — displayed 1:1 so pixels stay perfectly sharp -->
+                    <Image Source="{Binding SkinImage}" Width="96" Height="192" UseLayoutRounding="True"
+                           SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                 </Border>
 
                 <Button Style="{StaticResource GhostButton}" Content="Switch Account" Margin="0,16,0,0"
@@ -71,7 +73,21 @@
 
                 <!-- Version / OptiFine / Java status rows -->
                 <StackPanel Grid.Row="1" Margin="0,4,0,0">
-                    <TextBlock Text="{Binding VersionInfo}" FontSize="13" Foreground="{DynamicResource TextDimBrush}"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Version" FontSize="12" Foreground="{DynamicResource TextDimBrush}"
+                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <ComboBox Style="{StaticResource NovaComboBox}" Width="150" Height="34"
+                                  ItemsSource="{Binding Versions}" SelectedItem="{Binding SelectedVersion}"
+                                  IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"/>
+                        <CheckBox Style="{StaticResource NovaCheckBox}" Content="Fabric" Margin="16,0,0,0"
+                                  VerticalAlignment="Center" IsChecked="{Binding UseFabric}"
+                                  ToolTip="Load the Fabric mod loader (1.14+; ignored on 1.8.9)">
+                            <CheckBox.Visibility>
+                                <Binding Path="IsNovaVersion" Converter="{StaticResource InvBoolToVis}"/>
+                            </CheckBox.Visibility>
+                        </CheckBox>
+                    </StackPanel>
+                    <TextBlock Text="{Binding VersionInfo}" FontSize="13" Foreground="{DynamicResource TextDimBrush}" Margin="0,10,0,0"/>
                     <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                         <Ellipse Width="8" Height="8" Fill="{Binding OptiFineOk, Converter={StaticResource StatusBrush}}" VerticalAlignment="Center"/>
                         <TextBlock Text="{Binding OptiFineStatus}" FontSize="12" Margin="8,0,0,0" Foreground="{DynamicResource TextDimBrush}"/>

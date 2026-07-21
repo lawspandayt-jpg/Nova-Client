@@ -7,32 +7,34 @@ using NovaClient.Core.Util;
 namespace NovaClient.Minecraft;
 
 /// <summary>
-/// Downloads a legally redistributable Eclipse Temurin (OpenJDK 8, x64, Windows) runtime from the
-/// official Adoptium API, verifies its published SHA-256, and unpacks it into runtime/.
-/// Temurin is GPLv2+Classpath-Exception licensed; the notice ships in THIRD-PARTY-NOTICES.md.
+/// Downloads a legally redistributable Eclipse Temurin (OpenJDK, x64, Windows) runtime of any
+/// major version (8/17/21/…) from the official Adoptium API, verifies its published SHA-256,
+/// and unpacks it into runtime/. Temurin is GPLv2+CE licensed; see THIRD-PARTY-NOTICES.md.
 /// </summary>
 public sealed class AdoptiumJavaProvider
 {
-    private const string ApiUrl =
-        "https://api.adoptium.net/v3/assets/latest/8/hotspot?architecture=x64&image_type=jre&os=windows&vendor=eclipse";
-
     private readonly string _runtimeDirectory;
     private readonly string _cacheDirectory;
+    private readonly int _majorVersion;
 
-    public AdoptiumJavaProvider(string runtimeDirectory, string cacheDirectory)
+    public AdoptiumJavaProvider(string runtimeDirectory, string cacheDirectory, int majorVersion = 8)
     {
         _runtimeDirectory = runtimeDirectory;
         _cacheDirectory = cacheDirectory;
+        _majorVersion = majorVersion;
     }
+
+    private string ApiUrl =>
+        $"https://api.adoptium.net/v3/assets/latest/{_majorVersion}/hotspot?architecture=x64&image_type=jre&os=windows&vendor=eclipse";
 
     public async Task<JavaInstall> InstallAsync(IProgress<DownloadProgress>? progress, CancellationToken ct = default)
     {
-        NovaLog.Info("Java", "Querying Adoptium for the latest Temurin 8 (x64) runtime…");
+        NovaLog.Info("Java", $"Querying Adoptium for the latest Temurin {_majorVersion} (x64) runtime…");
         var json = await HttpProvider.Client.GetStringAsync(ApiUrl, ct);
         using var doc = JsonDocument.Parse(json);
         var release = doc.RootElement.EnumerateArray().FirstOrDefault();
         if (release.ValueKind != JsonValueKind.Object)
-            throw new InvalidOperationException("Adoptium returned no Temurin 8 release for Windows x64.");
+            throw new InvalidOperationException($"Adoptium returned no Temurin {_majorVersion} release for Windows x64.");
 
         var pkg = release.GetProperty("binary").GetProperty("package");
         var url = pkg.GetProperty("link").GetString()!;

@@ -15,6 +15,8 @@ public sealed class LauncherSettings
     public string? GameDirectory { get; set; }          // null → %AppData%\NovaClient
     public string ExtraJvmArgs { get; set; } = string.Empty;
     public AfterLaunchBehavior AfterLaunch { get; set; } = AfterLaunchBehavior.KeepOpen;
+    public string SelectedVersion { get; set; } = "1.8.9";
+    public bool UseFabric { get; set; }
     public bool RememberEmail { get; set; }
     public string RememberedEmail { get; set; } = string.Empty;   // an email address, not a secret
     public bool DisableDevUpdateChecks { get; set; }

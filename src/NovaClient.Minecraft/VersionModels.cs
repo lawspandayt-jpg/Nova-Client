@@ -21,13 +21,31 @@ public sealed class VersionJson
 {
     [JsonPropertyName("id")] public string Id { get; set; } = "";
     [JsonPropertyName("mainClass")] public string MainClass { get; set; } = "";
-    [JsonPropertyName("minecraftArguments")] public string? MinecraftArguments { get; set; }
+    [JsonPropertyName("minecraftArguments")] public string? MinecraftArguments { get; set; }   // legacy (≤1.12.2)
+    [JsonPropertyName("arguments")] public ModernArguments? Arguments { get; set; }            // modern (1.13+)
     [JsonPropertyName("assets")] public string? Assets { get; set; }
     [JsonPropertyName("assetIndex")] public AssetIndexRef? AssetIndex { get; set; }
     [JsonPropertyName("downloads")] public Dictionary<string, ArtifactRef>? Downloads { get; set; }
     [JsonPropertyName("libraries")] public List<Library> Libraries { get; set; } = new();
     [JsonPropertyName("inheritsFrom")] public string? InheritsFrom { get; set; }
     [JsonPropertyName("type")] public string? Type { get; set; }
+    [JsonPropertyName("javaVersion")] public JavaVersionRef? JavaVersion { get; set; }
+
+    /// <summary>Minimum Java major version (8 when the JSON predates the field).</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public int RequiredJavaMajor => JavaVersion?.MajorVersion ?? 8;
+}
+
+public sealed class JavaVersionRef
+{
+    [JsonPropertyName("majorVersion")] public int MajorVersion { get; set; } = 8;
+}
+
+/// <summary>1.13+ argument lists. Entries are plain strings or rule-guarded objects.</summary>
+public sealed class ModernArguments
+{
+    [JsonPropertyName("game")] public List<System.Text.Json.JsonElement> Game { get; set; } = new();
+    [JsonPropertyName("jvm")] public List<System.Text.Json.JsonElement> Jvm { get; set; } = new();
 }
 
 public sealed class AssetIndexRef

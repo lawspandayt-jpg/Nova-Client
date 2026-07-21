@@ -26,8 +26,8 @@ public static class SkinImaging
         catch (Exception) { return null; }
     }
 
-    /// <summary>8×8 face + hat overlay, scaled up crisply.</summary>
-    public static BitmapSource? RenderHead(BitmapSource skin, int scale = 12)
+    /// <summary>8×8 face + hat overlay, scaled up crisply. Display at exactly 8×scale pixels.</summary>
+    public static BitmapSource? RenderHead(BitmapSource skin, int scale = 8)
     {
         var visual = new DrawingVisual();
         using (var dc = visual.RenderOpen())

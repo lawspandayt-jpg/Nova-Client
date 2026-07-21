@@ -30,11 +30,15 @@
             <RowDefinition Height="44"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="60"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-        <!-- Custom title bar -->
-        <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+        <!-- Custom title bar (double-click maximizes) -->
+        <Grid Grid.Row="0" Grid.ColumnSpan="2" Background="Transparent"
+              MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
             <StackPanel Orientation="Horizontal" Margin="16,0" VerticalAlignment="Center">
-                <!-- Original logo mark: a simple four-point star -->
                 <Path Width="18" Height="18" Stretch="Uniform" Fill="{DynamicResource AccentBrush}"
                       Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z"/>
                 <TextBlock Text="{Binding LauncherTitle}" Margin="10,0,0,0" VerticalAlignment="Center"
@@ -44,11 +48,33 @@
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0">
                 <Button Style="{StaticResource CaptionButton}" Content="&#xE921;" Click="Minimize_Click" ToolTip="Minimize"/>
+                <Button x:Name="MaximizeButton" Style="{StaticResource CaptionButton}" Content="&#xE922;"
+                        Click="Maximize_Click" ToolTip="Maximize"/>
                 <Button Style="{StaticResource CaptionButton}" Content="&#xE8BB;" Click="Close_Click" ToolTip="Close"/>
             </StackPanel>
         </Grid>
 
+        <!-- Sidebar tabs -->
+        <Border Grid.Row="1" Grid.Column="0" Background="{DynamicResource PanelBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+            <Grid>
+                <StackPanel HorizontalAlignment="Center" Margin="0,10,0,0">
+                    <Button Style="{StaticResource SidebarButton}" Content="&#xE768;" ToolTip="Play"
+                            Command="{Binding NavPlayCommand}"/>
+                    <Button Style="{StaticResource SidebarButton}" Content="&#xE7FC;" ToolTip="OptiFine Setup"
+                            Command="{Binding NavOptiFineCommand}"/>
+                    <Button Style="{StaticResource SidebarButton}" Content="&#xE8B7;" ToolTip="Game Folder"
+                            Command="{Binding OpenFolderCommand}"/>
+                    <Button Style="{StaticResource SidebarButton}" Content="&#xE774;" ToolTip="Website"
+                            Command="{Binding OpenWebsiteCommand}"/>
+                </StackPanel>
+                <Button Style="{StaticResource SidebarButton}" Content="&#xE713;" ToolTip="Settings"
+                        Command="{Binding NavSettingsCommand}" VerticalAlignment="Bottom"
+                        HorizontalAlignment="Center" Margin="0,0,0,12"/>
+            </Grid>
+        </Border>
+
         <!-- Active screen -->
-        <ContentControl Grid.Row="1" Content="{Binding Current}"/>
+        <ContentControl Grid.Row="1" Grid.Column="1" Content="{Binding Current}"/>
     </Grid>
 </Window>

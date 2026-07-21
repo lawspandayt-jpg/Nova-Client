@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Media.Imaging;
@@ -23,7 +24,6 @@ public sealed class HomeViewModel : ViewModelBase
     // ----- account -----
     public string Username => _services.Auth.Session?.Profile.Name ?? "—";
     public string Uuid => _services.Auth.Session?.Profile.Uuid ?? "—";
-    public string MaskedEmail => EmailMasker.Mask(_services.Auth.Session?.Email);
     public string OwnershipText => _services.Auth.Session?.OwnsMinecraft == true
         ? "Minecraft: Java Edition — owned ✓" : "Ownership not confirmed";
     public bool OwnershipOk => _services.Auth.Session?.OwnsMinecraft == true;
@@ -71,8 +71,44 @@ public sealed class HomeViewModel : ViewModelBase
     private string _crashText = "";
     public string CrashText { get => _crashText; set => Set(ref _crashText, value); }
 
-    public string VersionInfo =>
-        $"Minecraft {_services.Branding.MinecraftVersion} · {_services.Branding.ClientName} v{_services.Branding.GameClientVersion}";
+    // ----- version selection -----
+    public ObservableCollection<string> Versions { get; } = new();
+
+    public string SelectedVersion
+    {
+        get => _services.Settings.Current.SelectedVersion;
+        set
+        {
+            if (_services.Settings.Current.SelectedVersion == value || string.IsNullOrEmpty(value)) return;
+            _services.Settings.Current.SelectedVersion = value;
+            _services.Settings.Save();
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsNovaVersion));
+            OnPropertyChanged(nameof(VersionInfo));
+            _ = RefreshAsync();
+        }
+    }
+
+    public bool UseFabric
+    {
+        get => _services.Settings.Current.UseFabric;
+        set
+        {
+            if (_services.Settings.Current.UseFabric == value) return;
+            _services.Settings.Current.UseFabric = value;
+            _services.Settings.Save();
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(VersionInfo));
+            _ = RefreshAsync();
+        }
+    }
+
+    /// <summary>The Nova in-game client (and OptiFine) load on 1.8.9; other versions run vanilla/Fabric.</summary>
+    public bool IsNovaVersion => SelectedVersion == "1.8.9";
+
+    public string VersionInfo => IsNovaVersion
+        ? $"Minecraft 1.8.9 · {_services.Branding.ClientName} v{_services.Branding.GameClientVersion}"
+        : $"Minecraft {SelectedVersion}{(UseFabric ? " · Fabric" : " · Vanilla")}";
 
     private bool _installReady;
     public bool InstallReady { get => _installReady; set => Set(ref _installReady, value); }
@@ -107,11 +143,37 @@ public sealed class HomeViewModel : ViewModelBase
     {
         _ = LoadSkinAsync();
         _ = CheckUpdatesAsync();
-        await DetectJavaAsync();
+        _ = LoadVersionListAsync();
+        await RefreshAsync();
+    }
+
+    /// <summary>Full pipeline for the selected version: install files, then ensure matching Java.</summary>
+    private async Task RefreshAsync()
+    {
+        if (IsBusy) return;
         await PrepareAsync(repair: false);
-        // Zero-setup experience: fetch the official Temurin 8 runtime automatically when the
-        // system has no compatible Java. The button remains as a manual retry.
-        if (!JavaOk) await InstallJavaAsync();
+        await EnsureJavaAsync();
+        OnPropertyChanged(nameof(CanLaunch));
+    }
+
+    private async Task LoadVersionListAsync()
+    {
+        try
+        {
+            var releases = await _services.Launcher.Installer.GetReleaseVersionsAsync();
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                Versions.Clear();
+                foreach (var id in releases) Versions.Add(id);
+                if (!Versions.Contains(SelectedVersion)) Versions.Insert(0, SelectedVersion);
+                OnPropertyChanged(nameof(SelectedVersion));
+            });
+        }
+        catch (Exception ex)
+        {
+            NovaLog.Warn("Versions", $"Could not load the version list: {ex.Message}");
+            if (Versions.Count == 0) Versions.Add("1.8.9");
+        }
     }
 
     private async Task LoadSkinAsync()
@@ -129,48 +191,47 @@ public sealed class HomeViewModel : ViewModelBase
         });
     }
 
-    private async Task DetectJavaAsync()
+    private int RequiredJavaMajor => _prepared?.RequiredJavaMajor ?? 8;
+
+    /// <summary>Finds a JVM matching the selected version's requirement; auto-installs Temurin if none.</summary>
+    private async Task EnsureJavaAsync()
     {
+        var required = RequiredJavaMajor;
         var settings = _services.Settings.Current;
         if (!string.IsNullOrEmpty(settings.JavaPath))
         {
             _java = await JavaLocator.ProbeAsync(settings.JavaPath);
-            if (_java is { IsCompatible: true })
+            if (_java is not null && _java.Satisfies(required))
             {
                 JavaStatus = $"Java: {_java.Description} (manual)";
                 JavaOk = true;
                 return;
             }
-            JavaStatus = _java is null
-                ? "Selected Java executable is invalid."
-                : $"Selected Java is incompatible: {_java.Description}";
         }
 
         var all = await JavaLocator.DetectAllAsync(_services.Paths.JavaRuntime);
-        _java = all.FirstOrDefault(j => j.IsCompatible);
+        _java = all.FirstOrDefault(j => j.Satisfies(required));
         if (_java is not null)
         {
             JavaStatus = $"Java: {_java.Description}";
             JavaOk = true;
+            return;
         }
-        else
-        {
-            var found = all.FirstOrDefault();
-            JavaStatus = found is null
-                ? "No Java found. Install the recommended Java 8 runtime below."
-                : $"Found {found.Description}. Minecraft 1.8.9 needs 64-bit Java 8 — install it below.";
-            JavaOk = false;
-        }
+
+        JavaOk = false;
+        JavaStatus = $"Minecraft {SelectedVersion} needs 64-bit Java {required} — installing it automatically…";
+        await InstallJavaAsync();
     }
 
     private async Task InstallJavaAsync()
     {
+        var required = RequiredJavaMajor;
         IsBusy = true;
         ProgressVisible = true;
-        StatusText = "Downloading Eclipse Temurin 8 (official Adoptium build)…";
+        StatusText = $"Downloading Eclipse Temurin {required} (official Adoptium build)…";
         try
         {
-            var provider = new AdoptiumJavaProvider(_services.Paths.JavaRuntime, _services.Paths.Cache);
+            var provider = new AdoptiumJavaProvider(_services.Paths.JavaRuntime, _services.Paths.Cache, required);
             var progress = new Progress<DownloadProgress>(p =>
             {
                 Progress = p.BytesTotal > 0 ? (double)p.BytesDone / p.BytesTotal : 0;
@@ -178,8 +239,8 @@ public sealed class HomeViewModel : ViewModelBase
             });
             _java = await provider.InstallAsync(progress);
             JavaStatus = $"Java: {_java.Description}";
-            JavaOk = _java.IsCompatible;
-            StatusText = "Java runtime installed.";
+            JavaOk = _java.Satisfies(required);
+            StatusText = "Ready to launch.";
         }
         catch (Exception ex)
         {
@@ -216,9 +277,11 @@ public sealed class HomeViewModel : ViewModelBase
                 }
             });
 
-            _prepared = await Task.Run(() => _services.Launcher.PrepareAsync(progress));
+            var versionId = SelectedVersion;
+            var useFabric = UseFabric && !IsNovaVersion;
+            _prepared = await Task.Run(() => _services.Launcher.PrepareAsync(versionId, useFabric, progress));
 
-            if (!_prepared.NovaClientJarPresent)
+            if (_prepared.IsNovaVersion && !_prepared.NovaClientJarPresent)
             {
                 StatusText = "This build is missing client/nova-client.jar — run client-java\\build.ps1 and rebuild.";
                 InstallReady = false;
@@ -229,11 +292,21 @@ public sealed class HomeViewModel : ViewModelBase
                 StatusText = "Ready to launch.";
             }
 
-            var optifine = _prepared.OptiFine;
-            OptiFineOk = optifine is not null;
-            OptiFineStatus = optifine is not null
-                ? $"OptiFine {optifine.Edition} — enabled ✓"
-                : "OptiFine not installed (optional — adds zoom + better FPS).";
+            if (_prepared.IsNovaVersion)
+            {
+                var optifine = _prepared.OptiFine;
+                OptiFineOk = optifine is not null;
+                OptiFineStatus = optifine is not null
+                    ? $"OptiFine {optifine.Edition} — enabled ✓"
+                    : "OptiFine not installed (optional — adds zoom + better FPS).";
+            }
+            else
+            {
+                OptiFineOk = true;
+                OptiFineStatus = _prepared.FabricLoaderVersion is not null
+                    ? $"Fabric loader {_prepared.FabricLoaderVersion} — enabled ✓ (drop mods in the mods folder)"
+                    : $"Vanilla {SelectedVersion} — the Nova client & OptiFine load on 1.8.9 only.";
+            }
         }
         catch (Exception ex)
         {

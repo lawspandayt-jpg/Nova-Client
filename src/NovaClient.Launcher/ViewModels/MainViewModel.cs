@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.IO;
 using NovaClient.Core.Logging;
 using NovaClient.Launcher.Common;
 using NovaClient.Launcher.Services;
@@ -14,9 +16,36 @@ public sealed class MainViewModel : ViewModelBase
     public string LauncherTitle => Services.Branding.LauncherTitle;
     public string VersionText => $"v{Services.Branding.LauncherVersion}";
 
+    // Sidebar navigation
+    public RelayCommand NavPlayCommand { get; }
+    public RelayCommand NavSettingsCommand { get; }
+    public RelayCommand NavOptiFineCommand { get; }
+    public RelayCommand OpenFolderCommand { get; }
+    public RelayCommand OpenWebsiteCommand { get; }
+
     public MainViewModel(AppServices services)
     {
         Services = services;
+        NavPlayCommand = new RelayCommand(() =>
+        {
+            if (Services.Auth.Session is not null) ShowHome();
+            else ShowLogin();
+        });
+        NavSettingsCommand = new RelayCommand(ShowSettings);
+        NavOptiFineCommand = new RelayCommand(() =>
+        {
+            if (Services.Auth.Session is not null) ShowOptiFineSetup();
+        });
+        OpenFolderCommand = new RelayCommand(() =>
+        {
+            Directory.CreateDirectory(Services.Paths.Root);
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{Services.Paths.Root}\"") { UseShellExecute = true });
+        });
+        OpenWebsiteCommand = new RelayCommand(() =>
+        {
+            try { Process.Start(new ProcessStartInfo(Services.Branding.WebsiteUrl) { UseShellExecute = true }); }
+            catch (Exception ex) { NovaLog.Warn("App", $"Could not open website: {ex.Message}"); }
+        });
         ShowLogin(restoreSession: true);
     }
 

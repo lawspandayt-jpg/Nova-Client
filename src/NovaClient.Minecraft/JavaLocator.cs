@@ -6,11 +6,17 @@ namespace NovaClient.Minecraft;
 
 public sealed record JavaInstall(string ExecutablePath, string VersionString, int MajorVersion, bool Is64Bit)
 {
-    /// <summary>Minecraft 1.8.9 needs 64-bit Java 8 (LWJGL 2 natives are x64; newer JVMs break 1.8.9).</summary>
-    public bool IsCompatible => MajorVersion == 8 && Is64Bit;
+    /// <summary>Compatible with Minecraft 1.8.9 (needs exactly 64-bit Java 8).</summary>
+    public bool IsCompatible => Satisfies(8);
 
-    public string Description =>
-        $"Java {VersionString} ({(Is64Bit ? "64-bit" : "32-bit")}){(IsCompatible ? "" : " — incompatible, need 64-bit Java 8")}";
+    /// <summary>
+    /// Old versions (required 8) need exactly Java 8 — newer JVMs break 1.8.9-era code.
+    /// Modern versions (required 16/17/21) accept their minimum or anything newer.
+    /// </summary>
+    public bool Satisfies(int requiredMajor) =>
+        Is64Bit && (requiredMajor <= 8 ? MajorVersion == 8 : MajorVersion >= requiredMajor);
+
+    public string Description => $"Java {VersionString} ({(Is64Bit ? "64-bit" : "32-bit")})";
 }
 
 /// <summary>Finds installed Java runtimes and validates them by running "java -version".</summary>

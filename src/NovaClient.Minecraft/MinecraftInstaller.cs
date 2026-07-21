@@ -1,4 +1,4 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Text.Json;
 using NovaClient.Core;
 using NovaClient.Core.Http;
@@ -10,13 +10,13 @@ namespace NovaClient.Minecraft;
 public sealed record InstallPhase(string Name, DownloadProgress? Download);
 
 /// <summary>
-/// Installs official Minecraft 1.8.9 into %AppData%\NovaClient: version JSON, client jar,
+/// Installs any official Minecraft release into %AppData%\NovaClient: version JSON, client jar,
 /// libraries, natives (extracted), asset index and asset objects — all hash-verified against
 /// Mojang's metadata. Repair simply re-runs the install; valid files are skipped by hash.
 /// </summary>
 public sealed class MinecraftInstaller
 {
-    public const string VanillaVersion = "1.8.9";
+    public const string VanillaVersion = "1.8.9"; // the version the Nova in-game client targets
     private const string ManifestUrl = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
     private const string AssetBaseUrl = "https://resources.download.minecraft.net";
 
@@ -25,10 +25,32 @@ public sealed class MinecraftInstaller
 
     public MinecraftInstaller(NovaPaths paths) => _paths = paths;
 
-    public string VersionDirectory => Path.Combine(_paths.Versions, VanillaVersion);
-    public string VersionJsonPath => Path.Combine(VersionDirectory, VanillaVersion + ".json");
-    public string ClientJarPath => Path.Combine(VersionDirectory, VanillaVersion + ".jar");
-    public string NativesDirectory => Path.Combine(_paths.Natives, VanillaVersion);
+    /// <summary>The vanilla version currently being installed/launched (any release).</summary>
+    public string VersionId { get; set; } = VanillaVersion;
+
+    public string VersionDirectory => Path.Combine(_paths.Versions, VersionId);
+    public string VersionJsonPath => Path.Combine(VersionDirectory, VersionId + ".json");
+    public string ClientJarPath => Path.Combine(VersionDirectory, VersionId + ".jar");
+    public string NativesDirectory => Path.Combine(_paths.Natives, VersionId);
+
+    /// <summary>All release version ids from Mojang's manifest, newest first (cached copy offline).</summary>
+    public async Task<List<string>> GetReleaseVersionsAsync(CancellationToken ct = default)
+    {
+        var cachePath = Path.Combine(_paths.Cache, "version_manifest_v2.json");
+        string text;
+        try
+        {
+            text = await Core.Http.HttpProvider.Client.GetStringAsync(ManifestUrl, ct);
+            Directory.CreateDirectory(_paths.Cache);
+            await File.WriteAllTextAsync(cachePath, text, ct);
+        }
+        catch (HttpRequestException) when (File.Exists(cachePath))
+        {
+            text = await File.ReadAllTextAsync(cachePath, ct);
+        }
+        var manifest = JsonSerializer.Deserialize<VersionManifest>(text)!;
+        return manifest.Versions.Where(v => v.Type == "release").Select(v => v.Id).ToList();
+    }
 
     public async Task<VersionJson> InstallAsync(IProgress<InstallPhase>? progress, CancellationToken ct = default)
     {
@@ -94,7 +116,7 @@ public sealed class MinecraftInstaller
         progress?.Report(new InstallPhase("Extracting native libraries…", null));
         ExtractNatives(nativeArtifacts, version);
 
-        NovaLog.Info("Install", $"Minecraft {VanillaVersion} installation verified ({items.Count} core files, {assetItems.Count} assets).");
+        NovaLog.Info("Install", $"Minecraft {VersionId} installation verified ({items.Count} core files, {assetItems.Count} assets).");
         return version;
     }
 
@@ -105,8 +127,8 @@ public sealed class MinecraftInstaller
         {
             var manifestText = await HttpProvider.Client.GetStringAsync(ManifestUrl, ct);
             var manifest = JsonSerializer.Deserialize<VersionManifest>(manifestText)!;
-            var entry = manifest.Versions.FirstOrDefault(v => v.Id == VanillaVersion)
-                        ?? throw new InvalidOperationException($"Minecraft {VanillaVersion} not found in Mojang's manifest.");
+            var entry = manifest.Versions.FirstOrDefault(v => v.Id == VersionId)
+                        ?? throw new InvalidOperationException($"Minecraft {VersionId} not found in Mojang's manifest.");
             versionJsonText = await HttpProvider.Client.GetStringAsync(entry.Url, ct);
             Directory.CreateDirectory(VersionDirectory);
             await File.WriteAllTextAsync(VersionJsonPath, versionJsonText, ct);
@@ -144,7 +166,7 @@ public sealed class MinecraftInstaller
                 if (excluded || entry.FullName.StartsWith("META-INF", StringComparison.OrdinalIgnoreCase)) continue;
                 var target = Path.Combine(NativesDirectory, entry.Name);
                 try { entry.ExtractToFile(target, overwrite: true); }
-                catch (IOException) { /* file locked by a running game — keep existing */ }
+                catch (IOException) { /* file locked by a running game â€” keep existing */ }
             }
         }
     }
@@ -161,3 +183,4 @@ public sealed class MinecraftInstaller
         }
     }
 }
+
