@@ -81,6 +81,46 @@
                                                     </ControlTemplate>
                                                 </Button.Template>
                                             </Button>
+
+                                            <!-- Patch picker flyout: tucked beside the card -->
+                                            <Popup IsOpen="{Binding IsFlyoutOpen, Mode=TwoWay}" StaysOpen="False"
+                                                   Placement="Right" HorizontalOffset="6" VerticalOffset="14"
+                                                   AllowsTransparency="True" PopupAnimation="Fade">
+                                                <Border Background="{DynamicResource PanelBrush}"
+                                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                                        CornerRadius="10" Padding="6" MinWidth="120" MaxHeight="240">
+                                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                                        <ItemsControl ItemsSource="{Binding Patches}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Button Command="{Binding SelectCommand}" Cursor="Hand">
+                                                                        <Button.Template>
+                                                                            <ControlTemplate TargetType="Button">
+                                                                                <Border x:Name="Row" CornerRadius="6" Padding="12,6" Background="Transparent">
+                                                                                    <StackPanel Orientation="Horizontal">
+                                                                                        <TextBlock Text="{Binding Id}" FontSize="12"
+                                                                                                   Foreground="{DynamicResource TextBrush}"/>
+                                                                                        <Path Data="{StaticResource IconCheck}" Stroke="{DynamicResource AccentBrush}"
+                                                                                              StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                                                                              Stretch="Uniform" Width="9" Height="9" Margin="8,0,0,0"
+                                                                                              VerticalAlignment="Center"
+                                                                                              Visibility="{Binding IsCurrent, Converter={StaticResource BoolToVis}}"/>
+                                                                                    </StackPanel>
+                                                                                </Border>
+                                                                                <ControlTemplate.Triggers>
+                                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                                        <Setter TargetName="Row" Property="Background" Value="{DynamicResource Panel2Brush}"/>
+                                                                                    </Trigger>
+                                                                                </ControlTemplate.Triggers>
+                                                                            </ControlTemplate>
+                                                                        </Button.Template>
+                                                                    </Button>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </ScrollViewer>
+                                                </Border>
+                                            </Popup>
                                         </Grid>
                                     </Border>
                                     <ControlTemplate.Triggers>

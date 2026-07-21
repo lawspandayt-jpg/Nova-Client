@@ -6,18 +6,26 @@ using NovaClient.Launcher.Common;
 
 namespace NovaClient.Launcher.ViewModels;
 
+public sealed record PatchItem(string Id, bool IsCurrent, RelayCommand SelectCommand);
+
 public sealed class VersionTile : ViewModelBase
 {
-    public required string Id { get; init; }
+    public required string Id { get; init; }             // latest patch of the line (shown on card)
     public required string Title { get; init; }          // e.g. "NOVA 1.21"
     public required string Subtitle { get; init; }       // e.g. "Minecraft 1.21.11"
     public required Brush Background { get; init; }
     public required bool IsNova { get; init; }
-    public required RelayCommand SelectCommand { get; init; }
+    public RelayCommand SelectCommand { get; set; } = null!;
     public RelayCommand? BadgeCommand { get; init; }
+
+    /// <summary>All point releases of this major line, newest first (patch flyout).</summary>
+    public ObservableCollection<PatchItem> Patches { get; } = new();
 
     private bool _isSelected;
     public bool IsSelected { get => _isSelected; set => Set(ref _isSelected, value); }
+
+    private bool _isFlyoutOpen;
+    public bool IsFlyoutOpen { get => _isFlyoutOpen; set => Set(ref _isFlyoutOpen, value); }
 
     private string _badgeText = "";
     public string BadgeText { get => _badgeText; set => Set(ref _badgeText, value); }
@@ -64,7 +72,11 @@ public sealed class VersionsViewModel : ViewModelBase
                 if (releases.Contains(anchor) && !curated.Contains(anchor)) curated.Add(anchor);
             if (curated.Count == 0) curated.Add("1.8.9");
 
-            await Application.Current.Dispatcher.InvokeAsync(() => BuildTiles(curated));
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                _allReleases = releases;
+                BuildTiles(curated);
+            });
         }
         catch (Exception ex)
         {
@@ -72,6 +84,8 @@ public sealed class VersionsViewModel : ViewModelBase
             await Application.Current.Dispatcher.InvokeAsync(() => BuildTiles(new List<string> { "1.8.9" }));
         }
     }
+
+    private List<string> _allReleases = new();
 
     private void BuildTiles(List<string> ids)
     {
@@ -95,7 +109,6 @@ public sealed class VersionsViewModel : ViewModelBase
                 Subtitle = $"Minecraft {id}",
                 Background = brush,
                 IsNova = isNova,
-                SelectCommand = new RelayCommand(() => Select(id)),
                 BadgeCommand = new RelayCommand(() =>
                 {
                     if (isNova)
@@ -110,6 +123,30 @@ public sealed class VersionsViewModel : ViewModelBase
                     }
                 }),
             };
+
+            // Patch list for the flyout: every release of this major line, newest first.
+            var patches = _allReleases
+                .Where(r => r == major || r.StartsWith(major + "."))
+                .ToList();
+            if (patches.Count == 0) patches.Add(id);
+            foreach (var patch in patches)
+            {
+                var patchId = patch;
+                tile.Patches.Add(new PatchItem(patchId, patchId == settings.Current.SelectedVersion,
+                    new RelayCommand(() =>
+                    {
+                        tile.IsFlyoutOpen = false;
+                        Select(patchId);
+                    })));
+            }
+
+            var tileRef = tile;
+            // Card click opens the patch flyout beside the card (closing any other open flyout).
+            tile.SelectCommand = new RelayCommand(() =>
+            {
+                foreach (var other in Tiles) if (other != tileRef) other.IsFlyoutOpen = false;
+                tileRef.IsFlyoutOpen = !tileRef.IsFlyoutOpen;
+            });
             Tiles.Add(tile);
         }
         RefreshBadges();
