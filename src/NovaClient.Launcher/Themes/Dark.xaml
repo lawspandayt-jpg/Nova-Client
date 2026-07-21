@@ -128,6 +128,8 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="12,9"/>
         <Setter Property="FontSize" Value="14"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">

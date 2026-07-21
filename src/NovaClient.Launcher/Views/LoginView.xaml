@@ -28,7 +28,7 @@
                              Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
                              IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"
                              x:Name="EmailBox" KeyDown="EmailBox_KeyDown"/>
-                    <TextBlock Text="name@example.com" Margin="14,0,0,0" VerticalAlignment="Center"
+                    <TextBlock Text="name@example.com" Margin="13,0,0,0" VerticalAlignment="Center"
                                Foreground="{DynamicResource TextDimBrush}" IsHitTestVisible="False" Opacity="0.55">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
