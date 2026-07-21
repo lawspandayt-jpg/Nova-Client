@@ -31,6 +31,9 @@
         <DataTemplate DataType="{x:Type vm:ComingSoonViewModel}">
             <views:ComingSoonView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LogsViewModel}">
+            <views:LogsView/>
+        </DataTemplate>
 
         <!-- Labelled sidebar navigation item -->
         <Style x:Key="NavItem" TargetType="Button">
@@ -150,6 +153,15 @@
                                   HorizontalAlignment="Center"
                                   Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                             <TextBlock Text="Servers" Style="{StaticResource NavLabel}"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavItem}" ToolTip="Logs" Command="{Binding NavLogsCommand}"
+                            Background="{Binding ActivePage, Converter={StaticResource ActivePage}, ConverterParameter=Logs}">
+                        <StackPanel>
+                            <Path Data="{StaticResource IconDoc}" Stretch="Uniform" Width="13" Height="15" StrokeThickness="1.6"
+                                  StrokeLineJoin="Round" HorizontalAlignment="Center"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                            <TextBlock Text="Logs" Style="{StaticResource NavLabel}"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource NavItem}" ToolTip="Open the Nova Client game folder"

@@ -17,6 +17,7 @@ public sealed class MainViewModel : ViewModelBase
         private set
         {
             (_current as HomeViewModel)?.Detach();
+            (_current as LogsViewModel)?.Detach();
             Set(ref _current, value);
         }
     }
@@ -53,6 +54,7 @@ public sealed class MainViewModel : ViewModelBase
             if (Services.Auth.Session is not null) ShowVersions();
         });
         NavSettingsCommand = new RelayCommand(ShowSettings);
+        NavLogsCommand = new RelayCommand(ShowLogs);
         NavModsCommand = new RelayCommand(() => ShowComingSoon("Mods",
             "Browse and manage Fabric mods for modern versions right from the launcher."));
         NavServersCommand = new RelayCommand(() => ShowComingSoon("Servers",
@@ -107,6 +109,15 @@ public sealed class MainViewModel : ViewModelBase
     {
         Current = new OptiFineViewModel(this);
         ActivePage = "Home";
+    }
+
+    public RelayCommand NavLogsCommand { get; private set; } = null!;
+
+    public void ShowLogs()
+    {
+        (Current as LogsViewModel)?.Detach();
+        Current = new LogsViewModel(this);
+        ActivePage = "Logs";
     }
 
     public void ShowComingSoon(string title, string description)
