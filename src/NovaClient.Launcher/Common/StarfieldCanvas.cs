@@ -1,19 +1,18 @@
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 
 namespace NovaClient.Launcher.Common;
 
 /// <summary>
-/// Lightweight decorative starfield: scatters small twinkling dots across its area, each with its
-/// own randomized size, brightness and rhythm. Fixed seed → same sky every run. Purely visual.
+/// Decorative twinkling starfield drawn on a single visual via one composition-driven render
+/// loop, so it stays smooth even with thousands of stars (a per-element animation approach would
+/// choke). Fixed seed → the same sky every run. Purely visual, no hit-testing.
 /// </summary>
-public sealed class StarfieldCanvas : Canvas
+public sealed class StarfieldCanvas : FrameworkElement
 {
     public static readonly DependencyProperty StarCountProperty = DependencyProperty.Register(
-        nameof(StarCount), typeof(int), typeof(StarfieldCanvas), new PropertyMetadata(28));
+        nameof(StarCount), typeof(int), typeof(StarfieldCanvas),
+        new FrameworkPropertyMetadata(60, FrameworkPropertyMetadataOptions.AffectsRender, (d, _) => ((StarfieldCanvas)d).Rebuild()));
 
     public int StarCount
     {
@@ -21,56 +20,77 @@ public sealed class StarfieldCanvas : Canvas
         set => SetValue(StarCountProperty, value);
     }
 
-    private readonly List<(Ellipse Dot, double FracX, double FracY)> _stars = new();
-    private bool _built;
+    private readonly record struct Star(double FracX, double FracY, double Radius, double Peak, double Phase, double Speed);
+
+    private Star[] _stars = Array.Empty<Star>();
+    private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
+    private TimeSpan _lastFrame;
+    // Twinkles are slow, so ~30fps looks identical to 60 and halves idle CPU.
+    private static readonly TimeSpan FrameInterval = TimeSpan.FromMilliseconds(33);
+
+    // Pre-frozen brushes at stepped opacities: a shared mutable brush can't vary per star, and
+    // per-star PushOpacity would be slow. 48 buckets is visually seamless.
+    private const int Buckets = 48;
+    private static readonly SolidColorBrush[] BrushPool = BuildPool();
 
     public StarfieldCanvas()
     {
         IsHitTestVisible = false;
-        ClipToBounds = true;
-        Loaded += (_, _) => Build();
-        SizeChanged += (_, _) => Reposition();
+        Rebuild();
+        Loaded += (_, _) => CompositionTarget.Rendering += OnRendering;
+        Unloaded += (_, _) => CompositionTarget.Rendering -= OnRendering;
     }
 
-    private void Build()
+    private static SolidColorBrush[] BuildPool()
     {
-        if (_built) return;
-        _built = true;
-        var random = new Random(20260720); // fixed seed: a stable, hand-tuned sky
-
-        for (var i = 0; i < StarCount; i++)
+        var pool = new SolidColorBrush[Buckets];
+        for (var i = 0; i < Buckets; i++)
         {
-            var size = 1.0 + random.NextDouble() * 1.8;
-            var peak = 0.10 + random.NextDouble() * 0.38;
-            var dot = new Ellipse
-            {
-                Width = size,
-                Height = size,
-                Fill = Brushes.White,
-                Opacity = 0
-            };
-            _stars.Add((dot, random.NextDouble(), random.NextDouble()));
-            Children.Add(dot);
-
-            var twinkle = new DoubleAnimation(0.02, peak, TimeSpan.FromSeconds(0.9 + random.NextDouble() * 2.2))
-            {
-                AutoReverse = true,
-                RepeatBehavior = RepeatBehavior.Forever,
-                BeginTime = TimeSpan.FromSeconds(random.NextDouble() * 6),
-                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
-            };
-            dot.BeginAnimation(OpacityProperty, twinkle);
+            var brush = new SolidColorBrush(Colors.White) { Opacity = (i + 1) / (double)Buckets };
+            brush.Freeze();
+            pool[i] = brush;
         }
-        Reposition();
+        return pool;
     }
 
-    private void Reposition()
+    private void Rebuild()
     {
-        if (ActualWidth <= 0 || ActualHeight <= 0) return;
-        foreach (var (dot, fracX, fracY) in _stars)
+        var random = new Random(20260720); // fixed seed: a stable, hand-tuned sky
+        var count = Math.Max(0, StarCount);
+        _stars = new Star[count];
+        for (var i = 0; i < count; i++)
         {
-            SetLeft(dot, fracX * ActualWidth);
-            SetTop(dot, fracY * ActualHeight);
+            _stars[i] = new Star(
+                random.NextDouble(),
+                random.NextDouble(),
+                0.5 + random.NextDouble() * 1.1,
+                0.10 + random.NextDouble() * 0.42,
+                random.NextDouble() * Math.PI * 2,
+                0.6 + random.NextDouble() * 1.8);
+        }
+    }
+
+    private void OnRendering(object? sender, EventArgs e)
+    {
+        var now = _clock.Elapsed;
+        if (now - _lastFrame < FrameInterval) return;
+        _lastFrame = now;
+        InvalidateVisual();
+    }
+
+    protected override void OnRender(DrawingContext dc)
+    {
+        double w = ActualWidth, h = ActualHeight;
+        if (w <= 0 || h <= 0 || _stars.Length == 0) return;
+
+        var t = _clock.Elapsed.TotalSeconds;
+        foreach (var star in _stars)
+        {
+            // Sine twinkle in [0.02 .. peak]; each star has its own phase and speed.
+            var wave = (Math.Sin(t * star.Speed + star.Phase) + 1) * 0.5;
+            var opacity = 0.02 + wave * star.Peak;
+            var bucket = Math.Clamp((int)(opacity * Buckets), 0, Buckets - 1);
+            dc.DrawEllipse(BrushPool[bucket], null, new Point(star.FracX * w, star.FracY * h), star.Radius, star.Radius);
         }
     }
 }

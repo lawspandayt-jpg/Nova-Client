@@ -79,7 +79,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- Full-window starfield behind everything -->
-        <common:StarfieldCanvas Grid.RowSpan="2" Grid.ColumnSpan="2" StarCount="1000" Panel.ZIndex="-1"/>
+        <common:StarfieldCanvas Grid.RowSpan="2" Grid.ColumnSpan="2" StarCount="3000" Panel.ZIndex="-1"/>
 
         <!-- Header (drag + double-click maximize) -->
         <Grid Grid.Row="0" Grid.ColumnSpan="2" Background="Transparent"
