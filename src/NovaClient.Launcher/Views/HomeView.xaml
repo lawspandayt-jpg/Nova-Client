@@ -145,7 +145,7 @@
                         <Button Grid.Column="0" Style="{StaticResource NovaButton}" Height="52" FontSize="17"
                                 Command="{Binding LaunchCommand}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="White"
+                                <TextBlock Text="&#xE768;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" Foreground="White"
                                            VerticalAlignment="Center" Margin="0,0,10,0"/>
                                 <TextBlock Text="Launch Minecraft" Foreground="White" FontFamily="Segoe UI Semibold"/>
                             </StackPanel>

@@ -13,7 +13,7 @@
 
         <Border Grid.Row="0" Background="{DynamicResource PanelBrush}" Padding="14,10">
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                <TextBlock Text="&#xE72E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"
                            Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center"/>
                 <TextBlock Margin="8,0,0,0" FontSize="12" Foreground="{DynamicResource TextDimBrush}"
                            Text="Official Microsoft sign-in page — Nova Client never sees your password."
