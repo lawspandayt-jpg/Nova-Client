@@ -39,6 +39,8 @@
                 </LinearGradientBrush>
             </Border.Background>
             <Grid MinHeight="190">
+                <!-- Twinkling starfield -->
+                <common:StarfieldCanvas StarCount="30"/>
                 <!-- Animated backdrop: slow-spinning star, drifting sparkles, breathing glow -->
                 <Path x:Name="HeroStar" Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z"
                       Fill="{DynamicResource AccentBrush}" Opacity="0.07" Width="230" Height="230" Stretch="Uniform"
