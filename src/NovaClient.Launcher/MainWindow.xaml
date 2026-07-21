@@ -72,11 +72,6 @@
                         <Path Data="{StaticResource IconPlay}" Stretch="Uniform" Width="15" Height="15"
                               Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                     </Button>
-                    <Button Style="{StaticResource SidebarButton}" ToolTip="OptiFine Setup" Command="{Binding NavOptiFineCommand}">
-                        <Path Data="{StaticResource IconCube}" Stretch="Uniform" Width="16" Height="16" StrokeThickness="1.6"
-                              StrokeLineJoin="Round"
-                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
-                    </Button>
                     <Button Style="{StaticResource SidebarButton}" ToolTip="Game Folder" Command="{Binding OpenFolderCommand}">
                         <Path Data="{StaticResource IconFolder}" Stretch="Uniform" Width="16" Height="14" StrokeThickness="1.6"
                               StrokeLineJoin="Round"

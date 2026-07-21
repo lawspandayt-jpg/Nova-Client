@@ -74,6 +74,7 @@ public sealed class HomeViewModel : ViewModelBase
     // ----- version selection -----
     public ObservableCollection<string> Versions { get; } = new();
 
+    // Changing version/Fabric only records the choice — downloads happen when Launch is clicked.
     public string SelectedVersion
     {
         get => _services.Settings.Current.SelectedVersion;
@@ -85,7 +86,7 @@ public sealed class HomeViewModel : ViewModelBase
             OnPropertyChanged();
             OnPropertyChanged(nameof(IsNovaVersion));
             OnPropertyChanged(nameof(VersionInfo));
-            _ = RefreshAsync();
+            MarkPrepareStale();
         }
     }
 
@@ -99,9 +100,21 @@ public sealed class HomeViewModel : ViewModelBase
             _services.Settings.Save();
             OnPropertyChanged();
             OnPropertyChanged(nameof(VersionInfo));
-            _ = RefreshAsync();
+            MarkPrepareStale();
         }
     }
+
+    private void MarkPrepareStale()
+    {
+        StatusText = $"Ready — {VersionInfo} will download when you press Launch.";
+        OnPropertyChanged(nameof(CanLaunch));
+    }
+
+    /// <summary>True when what's prepared on disk matches the current version/Fabric selection.</summary>
+    private bool PreparedMatchesSelection =>
+        _prepared is not null
+        && _prepared.VersionId == SelectedVersion
+        && (_prepared.FabricLoaderVersion is not null) == (UseFabric && !IsNovaVersion);
 
     /// <summary>The Nova in-game client (and OptiFine) load on 1.8.9; other versions run vanilla/Fabric.</summary>
     public bool IsNovaVersion => SelectedVersion == "1.8.9";
@@ -113,9 +126,9 @@ public sealed class HomeViewModel : ViewModelBase
     private bool _installReady;
     public bool InstallReady { get => _installReady; set => Set(ref _installReady, value); }
 
-    // OptiFine is recommended but optional — players can launch immediately and add it later.
-    public bool CanLaunch =>
-        !IsBusy && !GameRunning && OwnershipOk && InstallReady && JavaOk && _prepared is not null;
+    // Launch is available as soon as the account checks out — any missing files/Java for the
+    // current selection are downloaded as the first step of launching.
+    public bool CanLaunch => !IsBusy && !GameRunning && OwnershipOk;
 
     // ----- commands -----
     public AsyncRelayCommand LaunchCommand { get; }
@@ -161,10 +174,22 @@ public sealed class HomeViewModel : ViewModelBase
         try
         {
             var releases = await _services.Launcher.Installer.GetReleaseVersionsAsync();
+            // Curated like the big clients: latest two major lines + the classic PvP/modding anchors.
+            var curated = new List<string>();
+            void AddLatestOf(string prefix)
+            {
+                var match = releases.FirstOrDefault(id => id == prefix || id.StartsWith(prefix + "."));
+                if (match is not null && !curated.Contains(match)) curated.Add(match);
+            }
+            AddLatestOf("1.21");
+            AddLatestOf("1.20");
+            foreach (var anchor in new[] { "1.19.4", "1.18.2", "1.17.1", "1.16.5", "1.12.2", "1.8.9" })
+                if (releases.Contains(anchor) && !curated.Contains(anchor)) curated.Add(anchor);
+
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 Versions.Clear();
-                foreach (var id in releases) Versions.Add(id);
+                foreach (var id in curated) Versions.Add(id);
                 if (!Versions.Contains(SelectedVersion)) Versions.Insert(0, SelectedVersion);
                 OnPropertyChanged(nameof(SelectedVersion));
             });
@@ -324,6 +349,17 @@ public sealed class HomeViewModel : ViewModelBase
 
     private async Task LaunchAsync()
     {
+        // Download-on-launch: bring files + Java in line with the current selection first.
+        if (!PreparedMatchesSelection || !InstallReady)
+        {
+            await PrepareAsync(repair: false);
+            if (!InstallReady) return;
+        }
+        if (_java is null || !JavaOk || !_java.Satisfies(RequiredJavaMajor))
+        {
+            await EnsureJavaAsync();
+            if (!JavaOk) return;
+        }
         if (_prepared is null || _java is null) return;
         CrashText = "";
         IsBusy = true;
