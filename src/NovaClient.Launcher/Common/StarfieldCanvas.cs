@@ -33,12 +33,52 @@ public sealed class StarfieldCanvas : FrameworkElement
     private const int Buckets = 48;
     private static readonly SolidColorBrush[] BrushPool = BuildPool();
 
+    private bool _running;
+
     public StarfieldCanvas()
     {
         IsHitTestVisible = false;
         Rebuild();
-        Loaded += (_, _) => CompositionTarget.Rendering += OnRendering;
-        Unloaded += (_, _) => CompositionTarget.Rendering -= OnRendering;
+        Loaded += OnLoaded;
+        Unloaded += (_, _) => Stop();
+        IsVisibleChanged += (_, _) => UpdateRunning();
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        var window = Window.GetWindow(this);
+        if (window is not null)
+        {
+            // Twinkle only while the launcher is the active foreground window — no CPU spent
+            // animating an invisible background while the player is in-game.
+            window.Activated += (_, _) => UpdateRunning();
+            window.Deactivated += (_, _) => UpdateRunning();
+            window.StateChanged += (_, _) => UpdateRunning();
+        }
+        UpdateRunning();
+    }
+
+    private void UpdateRunning()
+    {
+        var window = Window.GetWindow(this);
+        var shouldRun = IsVisible
+                        && window is { IsActive: true, WindowState: not WindowState.Minimized };
+        if (shouldRun) Start();
+        else Stop();
+    }
+
+    private void Start()
+    {
+        if (_running) return;
+        _running = true;
+        CompositionTarget.Rendering += OnRendering;
+    }
+
+    private void Stop()
+    {
+        if (!_running) return;
+        _running = false;
+        CompositionTarget.Rendering -= OnRendering;
     }
 
     private static SolidColorBrush[] BuildPool()
