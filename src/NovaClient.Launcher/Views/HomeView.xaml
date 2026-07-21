@@ -11,150 +11,163 @@
     </UserControl.Resources>
 
     <Grid Margin="24,8,24,24" Style="{StaticResource PageTransition}">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="300"/>
-            <ColumnDefinition Width="24"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="24"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-        <!-- Account card -->
-        <Border Grid.Column="0" Style="{StaticResource Card}" Effect="{StaticResource PanelShadow}">
-            <StackPanel>
-                <TextBlock Text="Account" Style="{StaticResource SectionTitle}"/>
-                <StackPanel Orientation="Horizontal">
-                    <Border CornerRadius="10" Width="72" Height="72" Background="{DynamicResource Panel2Brush}">
-                        <Image Source="{Binding HeadImage}" Width="64" Height="64" UseLayoutRounding="True"
+        <!-- ============ HERO ============ -->
+        <Border Grid.Row="0" CornerRadius="16" Effect="{StaticResource PanelShadow}" ClipToBounds="True">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#2B2350" Offset="0"/>
+                    <GradientStop Color="#1A1830" Offset="0.55"/>
+                    <GradientStop Color="#12141C" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <Grid MinHeight="240">
+                <!-- Decorative stars -->
+                <Path Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z" Fill="{DynamicResource AccentBrush}"
+                      Opacity="0.10" Width="260" Height="260" Stretch="Uniform"
+                      HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-50,0"/>
+                <Path Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z" Fill="White"
+                      Opacity="0.06" Width="90" Height="90" Stretch="Uniform"
+                      HorizontalAlignment="Left" VerticalAlignment="Top" Margin="60,20,0,0"/>
+
+                <!-- Account chip (top-left) -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20,16,0,0">
+                    <Border CornerRadius="8" Width="34" Height="34" Background="#33000000">
+                        <Image Source="{Binding HeadImage}" Width="32" Height="32" UseLayoutRounding="True"
                                SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                     </Border>
-                    <StackPanel Margin="14,10,0,0">
-                        <TextBlock Text="{Binding Username}" FontSize="19" FontFamily="Segoe UI Semibold"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                            <Ellipse Width="8" Height="8" Fill="{Binding OwnershipOk, Converter={StaticResource StatusBrush}}" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding OwnershipText}" FontSize="11" Margin="6,0,0,0"
+                    <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                        <TextBlock FontSize="13" FontFamily="Segoe UI Semibold">
+                            <Run Text="Welcome back," Foreground="{DynamicResource TextDimBrush}"/>
+                            <Run Text="{Binding Username, Mode=OneWay}"/>
+                        </TextBlock>
+                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                            <Ellipse Width="7" Height="7" Fill="{Binding OwnershipOk, Converter={StaticResource StatusBrush}}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding OwnershipText}" FontSize="10" Margin="5,0,0,0"
                                        Foreground="{DynamicResource TextDimBrush}"/>
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>
 
-                <TextBlock Text="UUID" FontSize="10" Foreground="{DynamicResource TextDimBrush}" Margin="0,16,0,2"/>
-                <TextBlock Text="{Binding Uuid}" FontSize="11" Foreground="{DynamicResource TextDimBrush}"
-                           TextWrapping="Wrap" FontFamily="Consolas"/>
+                <!-- Center: launch + version selection -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,34,0,20">
+                    <Button Style="{StaticResource NovaButton}" Width="340" Height="62" FontSize="19"
+                            Command="{Binding LaunchCommand}">
+                        <Button.Effect>
+                            <DropShadowEffect BlurRadius="34" ShadowDepth="0" Opacity="0.55" Color="#7C5CFF"/>
+                        </Button.Effect>
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconPlay}" Fill="White" Stretch="Uniform" Width="17" Height="17"
+                                  VerticalAlignment="Center" Margin="0,1,12,0"/>
+                            <TextBlock Text="LAUNCH GAME" Foreground="White" FontFamily="Segoe UI Semibold"/>
+                        </StackPanel>
+                    </Button>
+                    <TextBlock Text="{Binding VersionInfo}" FontSize="12" Foreground="{DynamicResource TextDimBrush}"
+                               HorizontalAlignment="Center" Margin="0,10,0,0"/>
 
-                <!-- Skin preview -->
-                <Border Background="{DynamicResource Panel2Brush}" CornerRadius="10" Margin="0,16,0,0"
-                        Padding="0,14" HorizontalAlignment="Stretch">
-                    <!-- Native bitmap is 96×192 — displayed 1:1 so pixels stay perfectly sharp -->
-                    <Image Source="{Binding SkinImage}" Width="96" Height="192" UseLayoutRounding="True"
-                           SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                </Border>
-
-                <Button Style="{StaticResource GhostButton}" Content="Switch Account" Margin="0,16,0,0"
-                        Command="{Binding SwitchAccountCommand}"/>
-                <Button Style="{StaticResource GhostButton}" Content="Sign Out" Margin="0,8,0,0"
-                        Command="{Binding SignOutCommand}"/>
-            </StackPanel>
-        </Border>
-
-        <!-- Play panel -->
-        <Border Grid.Column="2" Style="{StaticResource Card}" Effect="{StaticResource PanelShadow}">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <Grid Grid.Row="0">
-                    <TextBlock Text="Play" Style="{StaticResource SectionTitle}"/>
-                    <Button Style="{StaticResource GhostButton}" Content="Settings" Padding="12,7" FontSize="12"
-                            HorizontalAlignment="Right" Command="{Binding SettingsCommand}"/>
-                </Grid>
-
-                <!-- Version / OptiFine / Java status rows -->
-                <StackPanel Grid.Row="1" Margin="0,4,0,0">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Version" FontSize="12" Foreground="{DynamicResource TextDimBrush}"
-                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,14,0,0">
                         <ComboBox Style="{StaticResource NovaComboBox}" Width="150" Height="34"
                                   ItemsSource="{Binding Versions}" SelectedItem="{Binding SelectedVersion}"
                                   IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"/>
-                        <CheckBox Style="{StaticResource NovaCheckBox}" Content="Fabric" Margin="16,0,0,0"
+                        <CheckBox Style="{StaticResource NovaCheckBox}" Content="Fabric" Margin="14,0,0,0"
                                   VerticalAlignment="Center" IsChecked="{Binding UseFabric}"
-                                  ToolTip="Load the Fabric mod loader (1.14+; ignored on 1.8.9)">
+                                  ToolTip="Load the Fabric mod loader (1.14+)">
                             <CheckBox.Visibility>
                                 <Binding Path="IsNovaVersion" Converter="{StaticResource InvBoolToVis}"/>
                             </CheckBox.Visibility>
                         </CheckBox>
+                        <Button Style="{StaticResource GhostButton}" Content="OptiFine" Padding="12,6" FontSize="12"
+                                Margin="14,0,0,0" Command="{Binding OptiFineCommand}"
+                                Visibility="{Binding IsNovaVersion, Converter={StaticResource BoolToVis}}"/>
+                        <Button Style="{StaticResource GhostButton}" Content="Repair" Padding="12,6" FontSize="12"
+                                Margin="8,0,0,0" Command="{Binding RepairCommand}"
+                                ToolTip="Re-verify and re-download game files"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding VersionInfo}" FontSize="13" Foreground="{DynamicResource TextDimBrush}" Margin="0,10,0,0"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                        <Ellipse Width="8" Height="8" Fill="{Binding OptiFineOk, Converter={StaticResource StatusBrush}}" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding OptiFineStatus}" FontSize="12" Margin="8,0,0,0" Foreground="{DynamicResource TextDimBrush}"/>
-                        <Button Style="{StaticResource GhostButton}" Content="OptiFine Setup" Padding="10,4" FontSize="11"
-                                Margin="12,0,0,0" Command="{Binding OptiFineCommand}"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                        <Ellipse Width="8" Height="8" Fill="{Binding JavaOk, Converter={StaticResource StatusBrush}}" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding JavaStatus}" FontSize="12" Margin="8,0,0,0"
-                                   Foreground="{DynamicResource TextDimBrush}" TextWrapping="Wrap" MaxWidth="420"/>
-                        <Button Content="Install Java 8" Padding="10,4" FontSize="11"
-                                Margin="12,0,0,0" Command="{Binding InstallJavaCommand}">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource GhostButton}">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding JavaOk}" Value="True">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                    </StackPanel>
-                </StackPanel>
-
-                <!-- Center: crash info -->
-                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="0,16,0,0"
-                              Visibility="{Binding CrashText, Converter={StaticResource StrToVis}}">
-                    <Border Background="#2A1517" CornerRadius="10" Padding="14">
-                        <StackPanel>
-                            <TextBlock Text="Game crash detected" Foreground="{DynamicResource DangerBrush}"
-                                       FontFamily="Segoe UI Semibold" FontSize="13"/>
-                            <TextBlock Text="{Binding CrashText}" FontSize="11" Margin="0,8,0,0"
-                                       Foreground="{DynamicResource TextDimBrush}" TextWrapping="Wrap" FontFamily="Consolas"/>
-                        </StackPanel>
-                    </Border>
-                </ScrollViewer>
-
-                <!-- Bottom: status, progress, launch -->
-                <StackPanel Grid.Row="3">
-                    <TextBlock Text="{Binding UpdateText}" FontSize="11" Foreground="{DynamicResource TextDimBrush}"
-                               Margin="0,0,0,8" Visibility="{Binding UpdateText, Converter={StaticResource StrToVis}}"/>
-                    <TextBlock Text="{Binding StatusText}" FontSize="13"/>
-                    <TextBlock Text="{Binding SpeedText}" FontSize="11" Foreground="{DynamicResource TextDimBrush}"
-                               Margin="0,4,0,0" Visibility="{Binding SpeedText, Converter={StaticResource StrToVis}}"/>
-                    <ProgressBar Style="{StaticResource NovaProgressBar}" Margin="0,10,0,0" Maximum="1"
-                                 Value="{Binding Progress, Mode=OneWay}"
-                                 Visibility="{Binding ProgressVisible, Converter={StaticResource BoolToVis}}"/>
-                    <Grid Margin="0,14,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Style="{StaticResource NovaButton}" Height="52" FontSize="17"
-                                Command="{Binding LaunchCommand}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE768;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" Foreground="White"
-                                           VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <TextBlock Text="Launch Minecraft" Foreground="White" FontFamily="Segoe UI Semibold"/>
-                            </StackPanel>
-                        </Button>
-                        <Button Grid.Column="1" Style="{StaticResource GhostButton}" Content="Repair" Margin="10,0,0,0"
-                                Height="52" Command="{Binding RepairCommand}" ToolTip="Re-verify and re-download game files"/>
-                    </Grid>
                 </StackPanel>
             </Grid>
         </Border>
+
+        <!-- ============ BELOW: status + account ============ -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="24"/>
+                <ColumnDefinition Width="280"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Status card -->
+            <Border Grid.Column="0" Style="{StaticResource Card}" Effect="{StaticResource PanelShadow}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0">
+                        <TextBlock Text="Status" Style="{StaticResource SectionTitle}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="8" Height="8" Fill="{Binding OptiFineOk, Converter={StaticResource StatusBrush}}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding OptiFineStatus}" FontSize="12" Margin="8,0,0,0"
+                                       Foreground="{DynamicResource TextDimBrush}" TextWrapping="Wrap" MaxWidth="440"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Ellipse Width="8" Height="8" Fill="{Binding JavaOk, Converter={StaticResource StatusBrush}}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding JavaStatus}" FontSize="12" Margin="8,0,0,0"
+                                       Foreground="{DynamicResource TextDimBrush}" TextWrapping="Wrap" MaxWidth="440"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding UpdateText}" FontSize="11" Foreground="{DynamicResource TextDimBrush}"
+                                   Margin="16,8,0,0" Visibility="{Binding UpdateText, Converter={StaticResource StrToVis}}"/>
+                    </StackPanel>
+
+                    <!-- Crash info -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,12,0,0"
+                                  Visibility="{Binding CrashText, Converter={StaticResource StrToVis}}">
+                        <Border Background="#2A1517" CornerRadius="10" Padding="14">
+                            <StackPanel>
+                                <TextBlock Text="Game crash detected" Foreground="{DynamicResource DangerBrush}"
+                                           FontFamily="Segoe UI Semibold" FontSize="13"/>
+                                <TextBlock Text="{Binding CrashText}" FontSize="11" Margin="0,8,0,0"
+                                           Foreground="{DynamicResource TextDimBrush}" TextWrapping="Wrap" FontFamily="Consolas"/>
+                            </StackPanel>
+                        </Border>
+                    </ScrollViewer>
+
+                    <!-- Progress -->
+                    <StackPanel Grid.Row="2" VerticalAlignment="Bottom">
+                        <TextBlock Text="{Binding StatusText}" FontSize="13"/>
+                        <TextBlock Text="{Binding SpeedText}" FontSize="11" Foreground="{DynamicResource TextDimBrush}"
+                                   Margin="0,4,0,0" Visibility="{Binding SpeedText, Converter={StaticResource StrToVis}}"/>
+                        <ProgressBar Style="{StaticResource NovaProgressBar}" Margin="0,10,0,0" Maximum="1"
+                                     Value="{Binding Progress, Mode=OneWay}"
+                                     Visibility="{Binding ProgressVisible, Converter={StaticResource BoolToVis}}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Account card -->
+            <Border Grid.Column="2" Style="{StaticResource Card}" Effect="{StaticResource PanelShadow}">
+                <StackPanel>
+                    <TextBlock Text="Account" Style="{StaticResource SectionTitle}"/>
+                    <Border Background="{DynamicResource Panel2Brush}" CornerRadius="10" Padding="0,14"
+                            HorizontalAlignment="Stretch">
+                        <!-- Native bitmap is 96×192 — displayed 1:1 so pixels stay perfectly sharp -->
+                        <Image Source="{Binding SkinImage}" Width="96" Height="192" UseLayoutRounding="True"
+                               SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                    </Border>
+                    <TextBlock Text="{Binding Username}" FontSize="16" FontFamily="Segoe UI Semibold"
+                               HorizontalAlignment="Center" Margin="0,10,0,0"/>
+                    <Button Style="{StaticResource GhostButton}" Content="Switch Account" Margin="0,12,0,0"
+                            Command="{Binding SwitchAccountCommand}"/>
+                    <Button Style="{StaticResource GhostButton}" Content="Sign Out" Margin="0,8,0,0"
+                            Command="{Binding SignOutCommand}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

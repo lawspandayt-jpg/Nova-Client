@@ -51,8 +51,9 @@
                         Command="{Binding ContinueCommand}"
                         Visibility="{Binding IsBusy, Converter={StaticResource InvBoolToVis}}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE8A7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" Foreground="White"
-                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <Path Data="{StaticResource IconArrowRight}" Stroke="White" StrokeThickness="2"
+                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Stretch="Uniform" Width="15" Height="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
                         <TextBlock Text="Continue with Microsoft" Foreground="White" FontFamily="Segoe UI Semibold"/>
                     </StackPanel>
                 </Button>
@@ -92,9 +93,13 @@
                                                        Foreground="{DynamicResource TextDimBrush}"/>
                                         </StackPanel>
                                     </Button>
-                                    <Button Grid.Column="1" Style="{StaticResource CaptionButton}" Content="&#xE8BB;"
+                                    <Button Grid.Column="1" Style="{StaticResource CaptionButton}"
                                             Width="30" Height="30" Margin="6,0,0,0" ToolTip="Forget this account"
-                                            Command="{Binding RemoveCommand}"/>
+                                            Command="{Binding RemoveCommand}">
+                                        <Path Data="{StaticResource IconClose}" StrokeThickness="1.6" Stretch="Uniform"
+                                              Width="9" Height="9"
+                                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                    </Button>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

@@ -47,10 +47,19 @@
                            FontSize="11" Foreground="{DynamicResource TextDimBrush}"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0">
-                <Button Style="{StaticResource CaptionButton}" Content="&#xE921;" Click="Minimize_Click" ToolTip="Minimize"/>
-                <Button x:Name="MaximizeButton" Style="{StaticResource CaptionButton}" Content="&#xE922;"
-                        Click="Maximize_Click" ToolTip="Maximize"/>
-                <Button Style="{StaticResource CaptionButton}" Content="&#xE8BB;" Click="Close_Click" ToolTip="Close"/>
+                <Button Style="{StaticResource CaptionButton}" Click="Minimize_Click" ToolTip="Minimize">
+                    <Path Data="{StaticResource IconMinimize}" StrokeThickness="1.6" Stretch="Uniform" Width="11" Height="11"
+                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                </Button>
+                <Button x:Name="MaximizeButton" Style="{StaticResource CaptionButton}" Click="Maximize_Click" ToolTip="Maximize">
+                    <Path x:Name="MaximizeIcon" Data="{StaticResource IconMaximize}" StrokeThickness="1.6"
+                          Stretch="Uniform" Width="10" Height="10"
+                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                </Button>
+                <Button Style="{StaticResource CaptionButton}" Click="Close_Click" ToolTip="Close">
+                    <Path Data="{StaticResource IconClose}" StrokeThickness="1.6" Stretch="Uniform" Width="10" Height="10"
+                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                </Button>
             </StackPanel>
         </Grid>
 
@@ -59,18 +68,31 @@
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
             <Grid>
                 <StackPanel HorizontalAlignment="Center" Margin="0,10,0,0">
-                    <Button Style="{StaticResource SidebarButton}" Content="&#xE768;" ToolTip="Play"
-                            Command="{Binding NavPlayCommand}"/>
-                    <Button Style="{StaticResource SidebarButton}" Content="&#xE7FC;" ToolTip="OptiFine Setup"
-                            Command="{Binding NavOptiFineCommand}"/>
-                    <Button Style="{StaticResource SidebarButton}" Content="&#xE8B7;" ToolTip="Game Folder"
-                            Command="{Binding OpenFolderCommand}"/>
-                    <Button Style="{StaticResource SidebarButton}" Content="&#xE774;" ToolTip="Website"
-                            Command="{Binding OpenWebsiteCommand}"/>
+                    <Button Style="{StaticResource SidebarButton}" ToolTip="Play" Command="{Binding NavPlayCommand}">
+                        <Path Data="{StaticResource IconPlay}" Stretch="Uniform" Width="15" Height="15"
+                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    </Button>
+                    <Button Style="{StaticResource SidebarButton}" ToolTip="OptiFine Setup" Command="{Binding NavOptiFineCommand}">
+                        <Path Data="{StaticResource IconCube}" Stretch="Uniform" Width="16" Height="16" StrokeThickness="1.6"
+                              StrokeLineJoin="Round"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    </Button>
+                    <Button Style="{StaticResource SidebarButton}" ToolTip="Game Folder" Command="{Binding OpenFolderCommand}">
+                        <Path Data="{StaticResource IconFolder}" Stretch="Uniform" Width="16" Height="14" StrokeThickness="1.6"
+                              StrokeLineJoin="Round"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    </Button>
+                    <Button Style="{StaticResource SidebarButton}" ToolTip="Website" Command="{Binding OpenWebsiteCommand}">
+                        <Path Data="{StaticResource IconGlobe}" Stretch="Uniform" Width="16" Height="16" StrokeThickness="1.4"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    </Button>
                 </StackPanel>
-                <Button Style="{StaticResource SidebarButton}" Content="&#xE713;" ToolTip="Settings"
-                        Command="{Binding NavSettingsCommand}" VerticalAlignment="Bottom"
-                        HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                <Button Style="{StaticResource SidebarButton}" ToolTip="Settings" Command="{Binding NavSettingsCommand}"
+                        VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,12">
+                    <Path Data="{StaticResource IconGear}" Stretch="Uniform" Width="15" Height="15" StrokeThickness="1.6"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                </Button>
             </Grid>
         </Border>
 

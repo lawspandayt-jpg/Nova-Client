@@ -10,6 +10,8 @@ public partial class MainWindow : Window
         InitializeComponent();
         StateChanged += (_, _) =>
         {
+            MaximizeIcon.Data = (System.Windows.Media.Geometry)FindResource(
+                WindowState == WindowState.Maximized ? "IconRestore" : "IconMaximize");
             MaximizeButton.Content = WindowState == WindowState.Maximized ? "" : "";
             MaximizeButton.ToolTip = WindowState == WindowState.Maximized ? "Restore" : "Maximize";
             // Keep the window from covering the taskbar when maximized (borderless window quirk).
