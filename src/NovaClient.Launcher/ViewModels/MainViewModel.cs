@@ -18,6 +18,7 @@ public sealed class MainViewModel : ViewModelBase
 
     // Sidebar navigation
     public RelayCommand NavPlayCommand { get; }
+    public RelayCommand NavVersionsCommand { get; }
     public RelayCommand NavSettingsCommand { get; }
     public RelayCommand NavOptiFineCommand { get; }
     public RelayCommand OpenFolderCommand { get; }
@@ -30,6 +31,10 @@ public sealed class MainViewModel : ViewModelBase
         {
             if (Services.Auth.Session is not null) ShowHome();
             else ShowLogin();
+        });
+        NavVersionsCommand = new RelayCommand(() =>
+        {
+            if (Services.Auth.Session is not null) ShowVersions();
         });
         NavSettingsCommand = new RelayCommand(ShowSettings);
         NavOptiFineCommand = new RelayCommand(() =>
@@ -64,6 +69,8 @@ public sealed class MainViewModel : ViewModelBase
     }
 
     public void ShowSettings() => Current = new SettingsViewModel(this);
+
+    public void ShowVersions() => Current = new VersionsViewModel(this);
 
     public void ShowOptiFineSetup() => Current = new OptiFineViewModel(this);
 

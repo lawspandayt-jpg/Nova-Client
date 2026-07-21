@@ -23,6 +23,9 @@
         <DataTemplate DataType="{x:Type vm:OptiFineViewModel}">
             <views:OptiFineView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:VersionsViewModel}">
+            <views:VersionsView/>
+        </DataTemplate>
     </Window.Resources>
 
     <Grid>
@@ -71,6 +74,11 @@
                     <Button Style="{StaticResource SidebarButton}" ToolTip="Play" Command="{Binding NavPlayCommand}">
                         <Path Data="{StaticResource IconPlay}" Stretch="Uniform" Width="15" Height="15"
                               Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    </Button>
+                    <Button Style="{StaticResource SidebarButton}" ToolTip="Versions" Command="{Binding NavVersionsCommand}">
+                        <Path Data="{StaticResource IconGrid}" Stretch="Uniform" Width="15" Height="15" StrokeThickness="1.6"
+                              StrokeLineJoin="Round"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                     </Button>
                     <Button Style="{StaticResource SidebarButton}" ToolTip="Game Folder" Command="{Binding OpenFolderCommand}">
                         <Path Data="{StaticResource IconFolder}" Stretch="Uniform" Width="16" Height="14" StrokeThickness="1.6"

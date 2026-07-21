@@ -71,18 +71,10 @@
                                HorizontalAlignment="Center" Margin="0,10,0,0"/>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,14,0,0">
-                        <ComboBox Style="{StaticResource NovaComboBox}" Width="150" Height="34"
-                                  ItemsSource="{Binding Versions}" SelectedItem="{Binding SelectedVersion}"
-                                  IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"/>
-                        <CheckBox Style="{StaticResource NovaCheckBox}" Content="Fabric" Margin="14,0,0,0"
-                                  VerticalAlignment="Center" IsChecked="{Binding UseFabric}"
-                                  ToolTip="Load the Fabric mod loader (1.14+)">
-                            <CheckBox.Visibility>
-                                <Binding Path="IsNovaVersion" Converter="{StaticResource InvBoolToVis}"/>
-                            </CheckBox.Visibility>
-                        </CheckBox>
+                        <Button Style="{StaticResource GhostButton}" Content="Change Version" Padding="14,6" FontSize="12"
+                                Command="{Binding ChangeVersionCommand}"/>
                         <Button Style="{StaticResource GhostButton}" Content="OptiFine" Padding="12,6" FontSize="12"
-                                Margin="14,0,0,0" Command="{Binding OptiFineCommand}"
+                                Margin="8,0,0,0" Command="{Binding OptiFineCommand}"
                                 Visibility="{Binding IsNovaVersion, Converter={StaticResource BoolToVis}}"/>
                         <Button Style="{StaticResource GhostButton}" Content="Repair" Padding="12,6" FontSize="12"
                                 Margin="8,0,0,0" Command="{Binding RepairCommand}"

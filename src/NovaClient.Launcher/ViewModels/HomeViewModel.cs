@@ -135,6 +135,7 @@ public sealed class HomeViewModel : ViewModelBase
     public AsyncRelayCommand RepairCommand { get; }
     public AsyncRelayCommand InstallJavaCommand { get; }
     public RelayCommand SettingsCommand { get; }
+    public RelayCommand ChangeVersionCommand { get; }
     public RelayCommand OptiFineCommand { get; }
     public RelayCommand SignOutCommand { get; }
     public RelayCommand SwitchAccountCommand { get; }
@@ -147,6 +148,7 @@ public sealed class HomeViewModel : ViewModelBase
         RepairCommand = new AsyncRelayCommand(() => PrepareAsync(repair: true), () => !IsBusy && !GameRunning);
         InstallJavaCommand = new AsyncRelayCommand(InstallJavaAsync, () => !IsBusy && !JavaOk);
         SettingsCommand = new RelayCommand(main.ShowSettings);
+        ChangeVersionCommand = new RelayCommand(main.ShowVersions);
         OptiFineCommand = new RelayCommand(main.ShowOptiFineSetup);
         SignOutCommand = new RelayCommand(() => main.SignOut(keepRememberedEmail: _services.Settings.Current.RememberEmail));
         SwitchAccountCommand = new RelayCommand(SwitchAccount);
@@ -156,16 +158,20 @@ public sealed class HomeViewModel : ViewModelBase
     {
         _ = LoadSkinAsync();
         _ = CheckUpdatesAsync();
-        _ = LoadVersionListAsync();
-        await RefreshAsync();
-    }
+        await LoadVersionListAsync();
 
-    /// <summary>Full pipeline for the selected version: install files, then ensure matching Java.</summary>
-    private async Task RefreshAsync()
-    {
-        if (IsBusy) return;
-        await PrepareAsync(repair: false);
-        await EnsureJavaAsync();
+        // Download-on-launch: nothing heavy happens here. Show cheap local status only.
+        var optifine = _services.Launcher.OptiFine.DetectInstalled();
+        OptiFineOk = !IsNovaVersion || optifine is not null;
+        OptiFineStatus = IsNovaVersion
+            ? optifine is not null
+                ? $"OptiFine {optifine.Edition} — enabled ✓"
+                : "OptiFine not installed (optional — adds zoom + better FPS)."
+            : UseFabric ? "Fabric — enabled ✓" : $"Vanilla {SelectedVersion}";
+        JavaOk = true;
+        JavaStatus = "Java: checked automatically at launch.";
+        InstallReady = false;
+        StatusText = $"Ready — {VersionInfo} verifies and downloads when you press Launch.";
         OnPropertyChanged(nameof(CanLaunch));
     }
 
