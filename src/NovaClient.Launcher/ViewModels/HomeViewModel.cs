@@ -205,11 +205,19 @@ public sealed class HomeViewModel : ViewModelBase
         SwitchAccountCommand = new RelayCommand(SwitchAccount);
     }
 
-    public async Task LoadAsync()
+    public async Task LoadAsync(bool repair = false)
     {
         _ = LoadSkinAsync();
         _ = CheckUpdatesAsync();
         await LoadVersionListAsync();
+        if (repair)
+        {
+            // Arriving from Settings → Repair Installation: run a full verify immediately.
+            await PrepareAsync(repair: true);
+            await EnsureJavaAsync();
+            OnPropertyChanged(nameof(CanLaunch));
+            return;
+        }
 
         // Download-on-launch: nothing heavy happens here. Show cheap local status only.
         var optifine = _services.Launcher.OptiFine.DetectInstalled();

@@ -30,7 +30,11 @@ public sealed class SettingsViewModel : ViewModelBase
         OpenResourcePacksCommand = new RelayCommand(() => OpenFolder(_services.Paths.ResourcePacks));
         OpenGameDirCommand = new RelayCommand(() => OpenFolder(_services.Paths.Root));
         OpenLogsCommand = new RelayCommand(() => OpenFolder(_services.Paths.Logs));
-        RepairCommand = new RelayCommand(() => { GoBack(); });
+        RepairCommand = new RelayCommand(() =>
+        {
+            if (_services.Auth.Session is not null) _main.ShowHome(repair: true);
+            else GoBack();
+        });
         ClearCacheCommand = new RelayCommand(ClearCache);
         ResetLauncherSettingsCommand = new RelayCommand(ResetLauncherSettings);
         ResetClientSettingsCommand = new RelayCommand(ResetClientSettings);

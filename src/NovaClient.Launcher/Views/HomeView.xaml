@@ -39,10 +39,74 @@
                 </LinearGradientBrush>
             </Border.Background>
             <Grid MinHeight="190">
-                <!-- Single subtle star -->
-                <Path Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z" Fill="{DynamicResource AccentBrush}"
-                      Opacity="0.07" Width="230" Height="230" Stretch="Uniform"
-                      HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-44,0"/>
+                <!-- Animated backdrop: slow-spinning star, drifting sparkles, breathing glow -->
+                <Path x:Name="HeroStar" Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z"
+                      Fill="{DynamicResource AccentBrush}" Opacity="0.07" Width="230" Height="230" Stretch="Uniform"
+                      HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-44,0"
+                      RenderTransformOrigin="0.5,0.5">
+                    <Path.RenderTransform>
+                        <RotateTransform/>
+                    </Path.RenderTransform>
+                    <Path.Triggers>
+                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever">
+                                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(RotateTransform.Angle)"
+                                                     From="0" To="360" Duration="0:2:0"/>
+                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.05" To="0.11"
+                                                     Duration="0:0:6" AutoReverse="True"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </Path.Triggers>
+                </Path>
+                <Path Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z" Fill="White"
+                      Opacity="0" Width="26" Height="26" Stretch="Uniform"
+                      HorizontalAlignment="Left" VerticalAlignment="Top" Margin="90,30,0,0"
+                      RenderTransformOrigin="0.5,0.5">
+                    <Path.RenderTransform>
+                        <TranslateTransform/>
+                    </Path.RenderTransform>
+                    <Path.Triggers>
+                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever">
+                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="0.16"
+                                                     Duration="0:0:7" AutoReverse="True"/>
+                                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)"
+                                                     From="0" To="26" Duration="0:0:14" AutoReverse="True">
+                                        <DoubleAnimation.EasingFunction>
+                                            <SineEase EasingMode="EaseInOut"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </Path.Triggers>
+                </Path>
+                <Path Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z" Fill="White"
+                      Opacity="0" Width="14" Height="14" Stretch="Uniform"
+                      HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="220,0,0,26">
+                    <Path.RenderTransform>
+                        <TranslateTransform/>
+                    </Path.RenderTransform>
+                    <Path.Triggers>
+                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever" BeginTime="0:0:3">
+                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="0.12"
+                                                     Duration="0:0:9" AutoReverse="True"/>
+                                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.X)"
+                                                     From="0" To="-34" Duration="0:0:18" AutoReverse="True">
+                                        <DoubleAnimation.EasingFunction>
+                                            <SineEase EasingMode="EaseInOut"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </Path.Triggers>
+                </Path>
 
                 <!-- Welcome chip -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="16,12,0,0">
@@ -94,28 +158,18 @@
                                HorizontalAlignment="Center" Margin="0,5,0,0"
                                Visibility="{Binding SpeedText, Converter={StaticResource StrToVis}}"/>
 
-                    <!-- Info chips -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
-                        <Border Style="{StaticResource InfoChip}">
-                            <TextBlock Style="{StaticResource ChipText}" Text="{Binding VersionInfo}"/>
-                        </Border>
-                        <Border Style="{StaticResource InfoChip}">
-                            <TextBlock Style="{StaticResource ChipText}" Text="{Binding RamText}"/>
-                        </Border>
-                    </StackPanel>
+                    <!-- Info chip -->
+                    <Border Style="{StaticResource InfoChip}" HorizontalAlignment="Center" Margin="0,12,0,0">
+                        <TextBlock Style="{StaticResource ChipText}" Text="{Binding VersionInfo}"/>
+                    </Border>
 
-                    <!-- Secondary actions -->
+                    <!-- Secondary actions (RAM / repair / install settings live in Settings) -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
                         <Button Style="{StaticResource GhostButton}" Content="Change Version" Padding="13,6" FontSize="12"
                                 Command="{Binding ChangeVersionCommand}"/>
                         <Button Style="{StaticResource GhostButton}" Content="OptiFine" Padding="12,6" FontSize="12"
                                 Margin="8,0,0,0" Command="{Binding OptiFineCommand}"
                                 Visibility="{Binding IsNovaVersion, Converter={StaticResource BoolToVis}}"/>
-                        <Button Style="{StaticResource GhostButton}" Content="Installation Settings" Padding="12,6" FontSize="12"
-                                Margin="8,0,0,0" Command="{Binding SettingsCommand}"/>
-                        <Button Style="{StaticResource GhostButton}" Content="Repair" Padding="12,6" FontSize="12"
-                                Margin="8,0,0,0" Command="{Binding RepairCommand}"
-                                ToolTip="Re-verify and re-download game files"/>
                     </StackPanel>
                 </StackPanel>
             </Grid>

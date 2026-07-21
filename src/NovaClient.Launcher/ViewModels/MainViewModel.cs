@@ -82,13 +82,13 @@ public sealed class MainViewModel : ViewModelBase
         if (restoreSession) _ = vm.TryRestoreSessionAsync();
     }
 
-    public void ShowHome()
+    public void ShowHome(bool repair = false)
     {
         var vm = new HomeViewModel(this);
         Current = vm;
         ActivePage = "Home";
         OnPropertyChanged(nameof(SelectedVersionText));
-        _ = vm.LoadAsync();
+        _ = vm.LoadAsync(repair);
     }
 
     public void ShowSettings()
