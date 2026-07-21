@@ -52,7 +52,7 @@ public sealed class StarfieldCanvas : Canvas
             _stars.Add((dot, random.NextDouble(), random.NextDouble()));
             Children.Add(dot);
 
-            var twinkle = new DoubleAnimation(0.02, peak, TimeSpan.FromSeconds(1.6 + random.NextDouble() * 4.4))
+            var twinkle = new DoubleAnimation(0.02, peak, TimeSpan.FromSeconds(0.9 + random.NextDouble() * 2.2))
             {
                 AutoReverse = true,
                 RepeatBehavior = RepeatBehavior.Forever,

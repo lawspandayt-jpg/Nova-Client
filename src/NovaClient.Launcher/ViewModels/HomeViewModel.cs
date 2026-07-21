@@ -50,6 +50,40 @@ public sealed class HomeViewModel : ViewModelBase
     private bool _accountMenuOpen;
     public bool AccountMenuOpen { get => _accountMenuOpen; set => Set(ref _accountMenuOpen, value); }
 
+    public sealed record NewsItem(string Title, string Date, string Summary);
+
+    public ObservableCollection<NewsItem> News { get; } = new();
+
+    /// <summary>Real news pulled from the project's GitHub releases; hidden when unavailable.</summary>
+    private async Task LoadNewsAsync()
+    {
+        try
+        {
+            var json = await Core.Http.HttpProvider.Client.GetStringAsync(
+                "https://api.github.com/repos/lawspandayt-jpg/Nova-Client/releases?per_page=3");
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            var items = new List<NewsItem>();
+            foreach (var release in doc.RootElement.EnumerateArray())
+            {
+                var title = release.GetProperty("name").GetString() ?? release.GetProperty("tag_name").GetString() ?? "Release";
+                var date = release.TryGetProperty("published_at", out var p) && p.GetString() is { } iso
+                    ? DateTimeOffset.Parse(iso).ToString("MMM d, yyyy") : "";
+                var body = release.TryGetProperty("body", out var b) ? b.GetString() ?? "" : "";
+                var summary = body.Split('\n').FirstOrDefault(l => !string.IsNullOrWhiteSpace(l))?.Trim() ?? "";
+                items.Add(new NewsItem(title, date, summary));
+            }
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                News.Clear();
+                foreach (var item in items) News.Add(item);
+            });
+        }
+        catch (Exception ex)
+        {
+            Core.Logging.NovaLog.Debug("News", $"News unavailable: {ex.Message}");
+        }
+    }
+
     public ObservableCollection<string> RecentActivity { get; } = new();
     private readonly Action<Core.Logging.LogEntry> _activityHandler;
 
@@ -209,6 +243,7 @@ public sealed class HomeViewModel : ViewModelBase
     {
         _ = LoadSkinAsync();
         _ = CheckUpdatesAsync();
+        _ = LoadNewsAsync();
         await LoadVersionListAsync();
         if (repair)
         {
