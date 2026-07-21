@@ -13,6 +13,7 @@
 
     <Window.Resources>
         <common:ActivePageBrushConverter x:Key="ActivePage"/>
+        <common:BoolToVisibilityConverter x:Key="BoolToVisHeader"/>
         <DataTemplate DataType="{x:Type vm:LoginViewModel}">
             <views:LoginView/>
         </DataTemplate>
@@ -102,6 +103,99 @@
                 </Border>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0">
+                <!-- Account chip + dropdown menu -->
+                <Grid Margin="0,0,6,0" Visibility="{Binding IsSignedIn, Converter={StaticResource BoolToVisHeader}}">
+                    <Button x:Name="AccountChip" Command="{Binding ToggleAccountMenuCommand}" Cursor="Hand" Height="32">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="Bd" Background="{DynamicResource Panel2Brush}" CornerRadius="8" Padding="6,3">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border CornerRadius="4" Width="20" Height="20" Background="#33000000">
+                                            <Image Source="{Binding CurrentHead}" Width="18" Height="18"
+                                                   RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding CurrentUsername}" Margin="7,0,5,0" VerticalAlignment="Center"
+                                                   FontSize="12" FontFamily="Segoe UI Semibold"
+                                                   Foreground="{DynamicResource TextBrush}"/>
+                                        <Path Data="{StaticResource IconChevronDown}" Stroke="{DynamicResource TextDimBrush}"
+                                              StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                              Stretch="Uniform" Width="9" Height="6" VerticalAlignment="Center" Margin="0,1,3,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BorderBrush}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <Popup IsOpen="{Binding AccountMenuOpen, Mode=TwoWay}" StaysOpen="False"
+                           PlacementTarget="{Binding ElementName=AccountChip}" Placement="Bottom"
+                           HorizontalOffset="0" VerticalOffset="6" AllowsTransparency="True" PopupAnimation="Fade">
+                        <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="10" Padding="6" MinWidth="210"
+                                Effect="{StaticResource PanelShadow}">
+                            <StackPanel>
+                                <!-- Switch account: saved accounts -->
+                                <TextBlock Text="SWITCH ACCOUNT" FontSize="9" FontFamily="Segoe UI Semibold"
+                                           Foreground="{DynamicResource TextDimBrush}" Margin="10,6,0,4"/>
+                                <ItemsControl ItemsSource="{Binding SavedAccounts}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Command="{Binding SelectCommand}" Cursor="Hand">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="Row" CornerRadius="6" Padding="10,6" Background="Transparent">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <Ellipse Width="7" Height="7" VerticalAlignment="Center"
+                                                                         Fill="{DynamicResource SuccessBrush}"
+                                                                         Visibility="{Binding IsActive, Converter={StaticResource BoolToVisHeader}}"/>
+                                                                <TextBlock Text="{Binding Name}" FontSize="12.5" Margin="8,0,0,0"
+                                                                           Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Row" Property="Background" Value="{DynamicResource Panel2Brush}"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Style="{StaticResource GhostButton}" Content="+ Add Account" FontSize="11.5"
+                                        Padding="10,6" HorizontalContentAlignment="Left" Margin="0,2,0,0"
+                                        Command="{Binding AddAccountCommand}"/>
+
+                                <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="4,8"/>
+
+                                <Button Style="{StaticResource GhostButton}" Content="Change Skin / Cape" FontSize="12"
+                                        Padding="10,7" HorizontalContentAlignment="Left" Command="{Binding ChangeSkinCommand}"/>
+                                <Button Style="{StaticResource GhostButton}" Content="Screenshots" FontSize="12"
+                                        Padding="10,7" HorizontalContentAlignment="Left" Margin="0,3,0,0"
+                                        Command="{Binding OpenScreenshotsCommand}"/>
+                                <Button Style="{StaticResource GhostButton}" Content="Account Settings" FontSize="12"
+                                        Padding="10,7" HorizontalContentAlignment="Left" Margin="0,3,0,0"
+                                        Command="{Binding AccountSettingsCommand}"/>
+
+                                <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="4,8"/>
+
+                                <Button Content="Sign Out" FontSize="12" Padding="10,7" HorizontalContentAlignment="Left"
+                                        Command="{Binding HeaderSignOutCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource GhostButton}">
+                                            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+                </Grid>
+
                 <Button Style="{StaticResource CaptionButton}" Click="Minimize_Click" ToolTip="Minimize">
                     <Path Data="{StaticResource IconMinimize}" StrokeThickness="1.6" Stretch="Uniform" Width="11" Height="11"
                           Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>

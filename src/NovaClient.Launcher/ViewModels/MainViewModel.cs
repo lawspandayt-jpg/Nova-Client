@@ -1,10 +1,22 @@
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Windows;
+using System.Windows.Media.Imaging;
 using NovaClient.Core.Logging;
 using NovaClient.Launcher.Common;
 using NovaClient.Launcher.Services;
 
 namespace NovaClient.Launcher.ViewModels;
+
+public sealed class HeaderAccount
+{
+    public required string Uuid { get; init; }
+    public required string Name { get; init; }
+    public BitmapSource? Head { get; set; }
+    public required bool IsActive { get; init; }
+    public required RelayCommand SelectCommand { get; init; }
+}
 
 public sealed class MainViewModel : ViewModelBase
 {
@@ -32,6 +44,25 @@ public sealed class MainViewModel : ViewModelBase
 
     public string LauncherTitle => Services.Branding.LauncherTitle;
     public string VersionText => $"v{Services.Branding.LauncherVersion}";
+
+    // ----- header account menu -----
+    public bool IsSignedIn => Services.Auth.Session is not null;
+    public string CurrentUsername => Services.Auth.Session?.Profile.Name ?? "";
+
+    private BitmapSource? _currentHead;
+    public BitmapSource? CurrentHead { get => _currentHead; private set => Set(ref _currentHead, value); }
+
+    private bool _accountMenuOpen;
+    public bool AccountMenuOpen { get => _accountMenuOpen; set => Set(ref _accountMenuOpen, value); }
+
+    public ObservableCollection<HeaderAccount> SavedAccounts { get; } = new();
+
+    public RelayCommand ToggleAccountMenuCommand { get; }
+    public RelayCommand AddAccountCommand { get; }
+    public RelayCommand ChangeSkinCommand { get; }
+    public RelayCommand OpenScreenshotsCommand { get; }
+    public RelayCommand AccountSettingsCommand { get; }
+    public RelayCommand HeaderSignOutCommand { get; }
 
     // Sidebar navigation
     public RelayCommand NavPlayCommand { get; }
@@ -73,7 +104,81 @@ public sealed class MainViewModel : ViewModelBase
             try { Process.Start(new ProcessStartInfo(Services.Branding.WebsiteUrl) { UseShellExecute = true }); }
             catch (Exception ex) { NovaLog.Warn("App", $"Could not open website: {ex.Message}"); }
         });
+
+        ToggleAccountMenuCommand = new RelayCommand(() => AccountMenuOpen = !AccountMenuOpen);
+        AddAccountCommand = new RelayCommand(() =>
+        {
+            AccountMenuOpen = false;
+            // Keeps existing accounts saved; the login screen offers them plus fresh email entry.
+            Services.Auth.Deactivate();
+            ShowLogin();
+        });
+        ChangeSkinCommand = new RelayCommand(() =>
+        {
+            AccountMenuOpen = false;
+            // Skins/capes are managed on Minecraft's official site (we never handle credentials here).
+            try { Process.Start(new ProcessStartInfo("https://www.minecraft.net/msaprofile/mygames/editskin") { UseShellExecute = true }); }
+            catch (Exception ex) { NovaLog.Warn("App", $"Could not open skin page: {ex.Message}"); }
+        });
+        OpenScreenshotsCommand = new RelayCommand(() =>
+        {
+            AccountMenuOpen = false;
+            Directory.CreateDirectory(Services.Paths.Screenshots);
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{Services.Paths.Screenshots}\"") { UseShellExecute = true });
+        });
+        AccountSettingsCommand = new RelayCommand(() => { AccountMenuOpen = false; ShowSettings(); });
+        HeaderSignOutCommand = new RelayCommand(() =>
+        {
+            AccountMenuOpen = false;
+            SignOut(keepRememberedEmail: Services.Settings.Current.RememberEmail);
+        });
+
         ShowLogin(restoreSession: true);
+    }
+
+    /// <summary>Refreshes the header account chip + switch menu; called whenever the session changes.</summary>
+    public void RefreshAccountMenu()
+    {
+        OnPropertyChanged(nameof(IsSignedIn));
+        OnPropertyChanged(nameof(CurrentUsername));
+        SavedAccounts.Clear();
+        var activeUuid = Services.Auth.Session?.Profile.Uuid;
+        foreach (var account in Services.Auth.GetSavedAccounts())
+        {
+            var uuid = account.Uuid;
+            SavedAccounts.Add(new HeaderAccount
+            {
+                Uuid = uuid,
+                Name = account.Name,
+                IsActive = uuid == activeUuid,
+                SelectCommand = new RelayCommand(async () =>
+                {
+                    AccountMenuOpen = false;
+                    if (uuid == Services.Auth.Session?.Profile.Uuid) return;
+                    var session = await Services.Auth.ActivateAsync(uuid);
+                    if (session is not null) ShowHome();
+                    else ShowLogin();
+                })
+            });
+        }
+        _ = LoadCurrentHeadAsync();
+    }
+
+    private async Task LoadCurrentHeadAsync()
+    {
+        var profile = Services.Auth.Session?.Profile;
+        if (profile is null) { CurrentHead = null; return; }
+        try
+        {
+            var file = await Services.Skins.GetSkinFileAsync(profile);
+            if (file is null) return;
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                var skin = SkinImaging.LoadSkin(file);
+                if (skin is not null) CurrentHead = SkinImaging.RenderHead(skin);
+            });
+        }
+        catch (Exception ex) { NovaLog.Debug("App", $"Header head load failed: {ex.Message}"); }
     }
 
     public void ShowLogin(bool restoreSession = false)
@@ -81,6 +186,7 @@ public sealed class MainViewModel : ViewModelBase
         var vm = new LoginViewModel(this);
         Current = vm;
         ActivePage = "Home";
+        RefreshAccountMenu();
         if (restoreSession) _ = vm.TryRestoreSessionAsync();
     }
 
@@ -90,6 +196,7 @@ public sealed class MainViewModel : ViewModelBase
         Current = vm;
         ActivePage = "Home";
         OnPropertyChanged(nameof(SelectedVersionText));
+        RefreshAccountMenu();
         _ = vm.LoadAsync(repair);
     }
 
