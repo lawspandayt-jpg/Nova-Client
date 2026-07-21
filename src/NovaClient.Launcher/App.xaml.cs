@@ -17,6 +17,12 @@ public partial class App : Application
         DispatcherUnhandledException += (_, args) =>
         {
             NovaLog.Error("App", "Unhandled UI exception", args.Exception);
+            var inner = args.Exception.InnerException;
+            while (inner is not null)
+            {
+                NovaLog.Error("App", $"  caused by: {inner.GetType().Name}: {inner.Message}");
+                inner = inner.InnerException;
+            }
             MessageBox.Show(args.Exception.Message, "Nova Client — unexpected error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
             args.Handled = true;

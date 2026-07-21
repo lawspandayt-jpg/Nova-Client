@@ -84,6 +84,130 @@ public sealed class HomeViewModel : ViewModelBase
         }
     }
 
+    // ----- friends -----
+    public sealed class FriendItem : ViewModelBase
+    {
+        public required string Uuid { get; init; }
+        public required string Name { get; init; }
+        public required RelayCommand RemoveCommand { get; init; }
+
+        private System.Windows.Media.Imaging.BitmapSource? _head;
+        public System.Windows.Media.Imaging.BitmapSource? Head { get => _head; set => Set(ref _head, value); }
+
+        private bool _online;
+        public bool Online { get => _online; set => Set(ref _online, value); }
+
+        private string _status = "Added";
+        public string Status { get => _status; set => Set(ref _status, value); }
+    }
+
+    public ObservableCollection<FriendItem> Friends { get; } = new();
+
+    private string _addFriendName = "";
+    public string AddFriendName { get => _addFriendName; set { if (Set(ref _addFriendName, value)) FriendError = ""; } }
+
+    private string _friendError = "";
+    public string FriendError { get => _friendError; set => Set(ref _friendError, value); }
+
+    private bool _presenceEnabled;
+    public bool PresenceEnabled { get => _presenceEnabled; set => Set(ref _presenceEnabled, value); }
+
+    public int OnlineFriendCount => Friends.Count(f => f.Online);
+    public string FriendsHeader => PresenceEnabled ? $"Friends ({OnlineFriendCount} online)" : $"Friends ({Friends.Count})";
+
+    public AsyncRelayCommand AddFriendCommand { get; }
+
+    private async Task LoadFriendsAsync()
+    {
+        PresenceEnabled = _services.Presence.Enabled;
+        await Application.Current.Dispatcher.InvokeAsync(() =>
+        {
+            Friends.Clear();
+            foreach (var friend in _services.Friends.Friends) Friends.Add(BuildFriendItem(friend));
+        });
+        _ = LoadFriendHeadsAsync();
+        _ = RefreshPresenceAsync();
+        OnPropertyChanged(nameof(FriendsHeader));
+    }
+
+    private FriendItem BuildFriendItem(Services.Friend friend)
+    {
+        var uuid = friend.Uuid;
+        return new FriendItem
+        {
+            Uuid = uuid,
+            Name = friend.Name,
+            RemoveCommand = new RelayCommand(() =>
+            {
+                _services.Friends.Remove(uuid);
+                var existing = Friends.FirstOrDefault(f => f.Uuid == uuid);
+                if (existing is not null) Friends.Remove(existing);
+                OnPropertyChanged(nameof(FriendsHeader));
+            })
+        };
+    }
+
+    private async Task LoadFriendHeadsAsync()
+    {
+        foreach (var friend in _services.Friends.Friends.ToList())
+        {
+            var item = Friends.FirstOrDefault(f => f.Uuid == friend.Uuid);
+            if (item is null || string.IsNullOrEmpty(friend.SkinUrl)) continue;
+            try
+            {
+                var bytes = await Core.Http.HttpProvider.Client.GetByteArrayAsync(friend.SkinUrl);
+                var cache = Path.Combine(_services.Paths.Cache, "skins", friend.Uuid + ".png");
+                Directory.CreateDirectory(Path.GetDirectoryName(cache)!);
+                await File.WriteAllBytesAsync(cache, bytes);
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    var skin = SkinImaging.LoadSkin(cache);
+                    if (skin is not null) item.Head = SkinImaging.RenderHead(skin);
+                });
+            }
+            catch { }
+        }
+    }
+
+    private async Task RefreshPresenceAsync()
+    {
+        if (!_services.Presence.Enabled) return;
+        var session = _services.Auth.Session;
+        if (session is not null)
+            _ = _services.Presence.HeartbeatAsync(session.Profile.Uuid, session.Profile.Name);
+        var online = await _services.Presence.GetOnlineAsync(Friends.Select(f => f.Uuid));
+        await Application.Current.Dispatcher.InvokeAsync(() =>
+        {
+            foreach (var friend in Friends)
+            {
+                friend.Online = online.Contains(friend.Uuid);
+                friend.Status = friend.Online ? "Online" : "Offline";
+            }
+            OnPropertyChanged(nameof(OnlineFriendCount));
+            OnPropertyChanged(nameof(FriendsHeader));
+        });
+    }
+
+    private async Task AddFriendAsync()
+    {
+        FriendError = "";
+        var name = AddFriendName.Trim();
+        if (name.Length == 0) return;
+        try
+        {
+            var friend = await _services.Friends.AddByNameAsync(name);
+            var item = BuildFriendItem(friend);
+            Friends.Add(item);
+            AddFriendName = "";
+            OnPropertyChanged(nameof(FriendsHeader));
+            _ = LoadFriendHeadsAsync();
+        }
+        catch (Exception ex)
+        {
+            FriendError = ex.Message;
+        }
+    }
+
     public ObservableCollection<string> RecentActivity { get; } = new();
     private readonly Action<Core.Logging.LogEntry> _activityHandler;
 
@@ -221,6 +345,7 @@ public sealed class HomeViewModel : ViewModelBase
             if (!string.IsNullOrEmpty(CrashText)) Clipboard.SetText(CrashText);
         });
         ToggleAccountMenuCommand = new RelayCommand(() => AccountMenuOpen = !AccountMenuOpen);
+        AddFriendCommand = new AsyncRelayCommand(AddFriendAsync);
 
         // Recent activity: mirror meaningful launcher events (redacted upstream by NovaLog).
         var interesting = new HashSet<string> { "Auth", "Game", "Launcher", "Install", "OptiFine", "Java", "Updater", "Fabric", "App" };
@@ -244,6 +369,7 @@ public sealed class HomeViewModel : ViewModelBase
         _ = LoadSkinAsync();
         _ = CheckUpdatesAsync();
         _ = LoadNewsAsync();
+        _ = LoadFriendsAsync();
         await LoadVersionListAsync();
         if (repair)
         {

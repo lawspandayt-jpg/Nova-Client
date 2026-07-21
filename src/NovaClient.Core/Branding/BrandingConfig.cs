@@ -19,6 +19,7 @@ public sealed class BrandingConfig
     [JsonPropertyName("supportUrl")] public string SupportUrl { get; set; } = "https://example.com/support";
     [JsonPropertyName("privacyUrl")] public string PrivacyUrl { get; set; } = "https://example.com/privacy";
     [JsonPropertyName("updateApiUrl")] public string UpdateApiUrl { get; set; } = "https://example.com/updates/manifest.json";
+    [JsonPropertyName("presenceApiUrl")] public string PresenceApiUrl { get; set; } = "";
     [JsonPropertyName("launcherVersion")] public string LauncherVersion { get; set; } = "1.0.0";
     [JsonPropertyName("gameClientVersion")] public string GameClientVersion { get; set; } = "1.0.0";
     [JsonPropertyName("minecraftVersion")] public string MinecraftVersion { get; set; } = "1.8.9";

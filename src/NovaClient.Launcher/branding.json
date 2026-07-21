@@ -9,6 +9,7 @@
   "supportUrl": "https://example.com/support",
   "privacyUrl": "https://example.com/privacy",
   "updateApiUrl": "https://example.com/updates/manifest.json",
+  "presenceApiUrl": "",
   "launcherVersion": "1.0.0",
   "gameClientVersion": "1.0.0",
   "minecraftVersion": "1.8.9",

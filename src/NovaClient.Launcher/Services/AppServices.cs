@@ -21,6 +21,8 @@ public sealed class AppServices
     public SkinService Skins { get; }
     public NovaLauncher Launcher { get; }
     public UpdateService Updater { get; }
+    public FriendsService Friends { get; }
+    public PresenceService Presence { get; }
 
     public AppServices()
     {
@@ -38,6 +40,8 @@ public sealed class AppServices
         Launcher = new NovaLauncher(Paths, Branding.GameClientVersion);
         Launcher.SetBranding(Branding.ClientName, Branding.AccentColor);
         Updater = new UpdateService(Branding.UpdateApiUrl, AppContext.BaseDirectory, Paths.Cache);
+        Friends = new FriendsService(Paths.Config);
+        Presence = new PresenceService(Branding.PresenceApiUrl);
 
         ExtractEmbeddedClientJar();
     }

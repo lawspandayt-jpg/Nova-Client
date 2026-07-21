@@ -21,309 +21,279 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Margin="20,6,20,20" Style="{StaticResource PageTransition}" MaxWidth="1000"
-          HorizontalAlignment="Center" VerticalAlignment="Top">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="18"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <Grid Margin="20,8,20,20" Style="{StaticResource PageTransition}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="18"/>
+            <ColumnDefinition Width="264"/>
+        </Grid.ColumnDefinitions>
 
-        <!-- ============ HERO ============ -->
-        <Border Grid.Row="0" CornerRadius="14" ClipToBounds="True"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-            <Border.Background>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                    <GradientStop Color="#1B1A28" Offset="0"/>
-                    <GradientStop Color="#12131A" Offset="0.6"/>
-                    <GradientStop Color="#0F1014" Offset="1"/>
-                </LinearGradientBrush>
-            </Border.Background>
-            <Grid MinHeight="190">
-                <!-- Twinkling starfield -->
-                <common:StarfieldCanvas StarCount="55"/>
-                <!-- Animated backdrop: slow-spinning star, drifting sparkles, breathing glow -->
-                <Path x:Name="HeroStar" Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z"
-                      Fill="{DynamicResource AccentBrush}" Opacity="0.07" Width="230" Height="230" Stretch="Uniform"
-                      HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-44,0"
-                      RenderTransformOrigin="0.5,0.5">
-                    <Path.RenderTransform>
-                        <RotateTransform/>
-                    </Path.RenderTransform>
-                    <Path.Triggers>
-                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                            <BeginStoryboard>
-                                <Storyboard RepeatBehavior="Forever">
-                                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(RotateTransform.Angle)"
-                                                     From="0" To="360" Duration="0:0:45"/>
-                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.05" To="0.11"
-                                                     Duration="0:0:6" AutoReverse="True"/>
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </EventTrigger>
-                    </Path.Triggers>
-                </Path>
-                <Path Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z" Fill="White"
-                      Opacity="0" Width="26" Height="26" Stretch="Uniform"
-                      HorizontalAlignment="Left" VerticalAlignment="Top" Margin="90,30,0,0"
-                      RenderTransformOrigin="0.5,0.5">
-                    <Path.RenderTransform>
-                        <TranslateTransform/>
-                    </Path.RenderTransform>
-                    <Path.Triggers>
-                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                            <BeginStoryboard>
-                                <Storyboard RepeatBehavior="Forever">
-                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="0.16"
-                                                     Duration="0:0:7" AutoReverse="True"/>
-                                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)"
-                                                     From="0" To="26" Duration="0:0:14" AutoReverse="True">
-                                        <DoubleAnimation.EasingFunction>
-                                            <SineEase EasingMode="EaseInOut"/>
-                                        </DoubleAnimation.EasingFunction>
-                                    </DoubleAnimation>
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </EventTrigger>
-                    </Path.Triggers>
-                </Path>
-                <Path Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z" Fill="White"
-                      Opacity="0" Width="14" Height="14" Stretch="Uniform"
-                      HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="220,0,0,26">
-                    <Path.RenderTransform>
-                        <TranslateTransform/>
-                    </Path.RenderTransform>
-                    <Path.Triggers>
-                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                            <BeginStoryboard>
-                                <Storyboard RepeatBehavior="Forever" BeginTime="0:0:3">
-                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="0.12"
-                                                     Duration="0:0:9" AutoReverse="True"/>
-                                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.X)"
-                                                     From="0" To="-34" Duration="0:0:18" AutoReverse="True">
-                                        <DoubleAnimation.EasingFunction>
-                                            <SineEase EasingMode="EaseInOut"/>
-                                        </DoubleAnimation.EasingFunction>
-                                    </DoubleAnimation>
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </EventTrigger>
-                    </Path.Triggers>
-                </Path>
+        <!-- ============ MAIN COLUMN ============ -->
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-                <!-- Welcome chip -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="16,12,0,0">
-                    <Border CornerRadius="7" Width="28" Height="28" Background="#33000000">
-                        <Image Source="{Binding HeadImage}" Width="24" Height="24" UseLayoutRounding="True"
-                               SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                    </Border>
-                    <TextBlock VerticalAlignment="Center" Margin="8,0,0,0" FontSize="12">
-                        <Run Text="Welcome back," Foreground="{DynamicResource TextDimBrush}"/>
-                        <Run Text="{Binding Username, Mode=OneWay}" FontFamily="Segoe UI Semibold"/>
-                    </TextBlock>
-                </StackPanel>
+            <!-- Welcome -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="2,0,0,12">
+                <TextBlock FontSize="15">
+                    <Run Text="Welcome back," Foreground="{DynamicResource TextDimBrush}"/>
+                    <Run Text="{Binding Username, Mode=OneWay}" FontFamily="Segoe UI Semibold"/>
+                </TextBlock>
+            </StackPanel>
 
-                <!-- Center: launch -->
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,26,0,18">
-                    <Button Width="330" Height="56" FontSize="17" Command="{Binding LaunchCommand}">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource NovaButton}">
-                                <Setter Property="Effect">
-                                    <Setter.Value>
-                                        <DropShadowEffect BlurRadius="22" ShadowDepth="0" Opacity="0.35" Color="#7C5CFF"/>
-                                    </Setter.Value>
-                                </Setter>
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Effect">
-                                            <Setter.Value>
-                                                <DropShadowEffect BlurRadius="30" ShadowDepth="0" Opacity="0.55" Color="#7C5CFF"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                        <StackPanel Orientation="Horizontal">
-                            <Path Data="{StaticResource IconPlay}" Fill="White" Stretch="Uniform" Width="15" Height="15"
-                                  VerticalAlignment="Center" Margin="0,1,10,0"
-                                  Visibility="{Binding IsBusy, Converter={StaticResource InvBoolToVis}}"/>
-                            <TextBlock Text="{Binding LaunchButtonText}" Foreground="White" FontFamily="Segoe UI Semibold"
-                                       MaxWidth="280" TextTrimming="CharacterEllipsis"/>
-                        </StackPanel>
-                    </Button>
-
-                    <!-- Progress while installing/launching -->
-                    <ProgressBar Style="{StaticResource NovaProgressBar}" Width="330" Margin="0,10,0,0" Maximum="1"
-                                 Value="{Binding Progress, Mode=OneWay}"
-                                 Visibility="{Binding ProgressVisible, Converter={StaticResource BoolToVis}}"/>
-                    <TextBlock Text="{Binding SpeedText}" FontSize="10.5" Foreground="{DynamicResource TextDimBrush}"
-                               HorizontalAlignment="Center" Margin="0,5,0,0"
-                               Visibility="{Binding SpeedText, Converter={StaticResource StrToVis}}"/>
-
-                    <!-- Info chip -->
-                    <Border Style="{StaticResource InfoChip}" HorizontalAlignment="Center" Margin="0,12,0,0">
-                        <TextBlock Style="{StaticResource ChipText}" Text="{Binding VersionInfo}"/>
-                    </Border>
-
-                    <!-- Secondary actions (RAM / repair / install settings live in Settings) -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
-                        <Button Style="{StaticResource GhostButton}" Content="Change Version" Padding="13,6" FontSize="12"
-                                Command="{Binding ChangeVersionCommand}"/>
-                        <Button Style="{StaticResource GhostButton}" Content="OptiFine" Padding="12,6" FontSize="12"
-                                Margin="8,0,0,0" Command="{Binding OptiFineCommand}"
-                                Visibility="{Binding IsNovaVersion, Converter={StaticResource BoolToVis}}"/>
-                    </StackPanel>
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- ============ NEWS (live from GitHub releases) ============ -->
-        <ItemsControl Grid.Row="1" ItemsSource="{Binding News}" Margin="0,14,0,0">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <UniformGrid Rows="1"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,12,0" Height="110" ClipToBounds="True">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="#26224A" Offset="0"/>
-                                <GradientStop Color="#171624" Offset="0.55"/>
-                                <GradientStop Color="#101116" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <Grid>
-                            <!-- banner art -->
-                            <Path Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z"
-                                  Fill="{DynamicResource AccentBrush}" Opacity="0.14" Width="120" Height="120"
-                                  Stretch="Uniform" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-26,0"/>
-                            <!-- unread dot -->
-                            <Ellipse Width="9" Height="9" Fill="{DynamicResource SuccessBrush}"
-                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0"/>
-                            <!-- date badge -->
-                            <Border Background="{DynamicResource AccentBrush}" CornerRadius="10" Padding="8,2"
-                                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,10,0">
-                                <TextBlock Text="{Binding Date}" FontSize="9.5" Foreground="White"
-                                           FontFamily="Segoe UI Semibold"/>
-                            </Border>
-                            <!-- title + summary bottom-left -->
-                            <StackPanel VerticalAlignment="Bottom" Margin="14,0,14,10">
-                                <TextBlock Text="{Binding Title}" FontSize="16" FontFamily="Segoe UI Black"
-                                           Foreground="White" TextTrimming="CharacterEllipsis">
-                                    <TextBlock.Effect>
-                                        <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.7"/>
-                                    </TextBlock.Effect>
-                                </TextBlock>
-                                <TextBlock Text="{Binding Summary}" FontSize="10.5" Foreground="#B8FFFFFF"
-                                           TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-
-        <!-- ============ DASHBOARD ============ -->
-        <Grid Grid.Row="3">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="18"/>
-                <ColumnDefinition Width="236"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Slim status strip -->
-            <Border Grid.Column="0" Style="{StaticResource Card}" Padding="16" VerticalAlignment="Top">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,2">
-                        <Ellipse Width="7" Height="7" Fill="{Binding OptiFineOk, Converter={StaticResource StatusBrush}}" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding OptiFineStatus}" FontSize="11.5" Margin="8,0,0,0"
-                                   Foreground="{DynamicResource TextDimBrush}" TextWrapping="Wrap"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                        <Ellipse Width="7" Height="7" Fill="{Binding JavaOk, Converter={StaticResource StatusBrush}}" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding StatusText}" FontSize="11.5" Margin="8,0,0,0" TextWrapping="Wrap"/>
-                    </StackPanel>
-
-                    <!-- Error block with copy (only on crash) -->
-                    <Border Background="#26E5534B" CornerRadius="8" Padding="10" Margin="0,10,0,0"
-                            Visibility="{Binding CrashText, Converter={StaticResource StrToVis}}">
-                        <StackPanel>
-                            <TextBlock Text="Game exited with a problem" Foreground="{DynamicResource DangerBrush}"
-                                       FontFamily="Segoe UI Semibold" FontSize="12"/>
-                            <TextBlock Text="{Binding CrashText}" FontSize="10.5" Margin="0,6,0,0" MaxHeight="72"
-                                       Foreground="{DynamicResource TextDimBrush}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
-                            <Button Style="{StaticResource GhostButton}" Content="Copy Details" Padding="10,4" FontSize="11"
-                                    HorizontalAlignment="Left" Margin="0,8,0,0" Command="{Binding CopyErrorCommand}"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </Border>
-
-            <!-- Account -->
-            <Border Grid.Column="2" Style="{StaticResource Card}" Padding="16" VerticalAlignment="Top">
+            <!-- Hero (large) -->
+            <Border Grid.Row="1" CornerRadius="16" ClipToBounds="True" MinHeight="300"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#1B1A28" Offset="0"/>
+                        <GradientStop Color="#12131A" Offset="0.6"/>
+                        <GradientStop Color="#0F1014" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
                 <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+                    <common:StarfieldCanvas StarCount="90"/>
+                    <!-- spinning nova -->
+                    <Path x:Name="HeroStar" Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z"
+                          Fill="{DynamicResource AccentBrush}" Opacity="0.07" Width="340" Height="340" Stretch="Uniform"
+                          HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-70,0"
+                          RenderTransformOrigin="0.5,0.5">
+                        <Path.RenderTransform>
+                            <RotateTransform/>
+                        </Path.RenderTransform>
+                        <Path.Triggers>
+                            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard RepeatBehavior="Forever">
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(RotateTransform.Angle)"
+                                                         From="0" To="360" Duration="0:1:0"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.05" To="0.10"
+                                                         Duration="0:0:6" AutoReverse="True"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </Path.Triggers>
+                    </Path>
 
-                    <Grid Grid.Row="0">
-                        <TextBlock Text="Account" FontSize="13" FontFamily="Segoe UI Semibold"/>
-                        <!-- Three-dot account menu -->
-                        <Button x:Name="AccountMenuButton" Style="{StaticResource CaptionButton}" Width="28" Height="24"
-                                HorizontalAlignment="Right" Command="{Binding ToggleAccountMenuCommand}" ToolTip="Account options">
+                    <!-- Center: launch -->
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <Button Width="360" Height="60" FontSize="18" Command="{Binding LaunchCommand}">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource NovaButton}">
+                                    <Setter Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect BlurRadius="26" ShadowDepth="0" Opacity="0.4" Color="#7C5CFF"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Effect">
+                                                <Setter.Value>
+                                                    <DropShadowEffect BlurRadius="34" ShadowDepth="0" Opacity="0.6" Color="#7C5CFF"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
                             <StackPanel Orientation="Horizontal">
-                                <Ellipse Width="3" Height="3" Fill="{DynamicResource TextDimBrush}" Margin="1,0"/>
-                                <Ellipse Width="3" Height="3" Fill="{DynamicResource TextDimBrush}" Margin="1,0"/>
-                                <Ellipse Width="3" Height="3" Fill="{DynamicResource TextDimBrush}" Margin="1,0"/>
+                                <Path Data="{StaticResource IconPlay}" Fill="White" Stretch="Uniform" Width="16" Height="16"
+                                      VerticalAlignment="Center" Margin="0,1,11,0"
+                                      Visibility="{Binding IsBusy, Converter={StaticResource InvBoolToVis}}"/>
+                                <TextBlock Text="{Binding LaunchButtonText}" Foreground="White" FontFamily="Segoe UI Semibold"
+                                           MaxWidth="300" TextTrimming="CharacterEllipsis"/>
                             </StackPanel>
                         </Button>
-                        <Popup IsOpen="{Binding AccountMenuOpen, Mode=TwoWay}" StaysOpen="False"
-                               PlacementTarget="{Binding ElementName=AccountMenuButton}" Placement="Bottom"
-                               HorizontalOffset="-90" AllowsTransparency="True" PopupAnimation="Fade">
-                            <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderBrush}"
-                                    BorderThickness="1" CornerRadius="9" Padding="6" MinWidth="150">
-                                <StackPanel>
-                                    <Button Style="{StaticResource GhostButton}" Content="Switch Account" FontSize="12"
-                                            Padding="10,7" Command="{Binding SwitchAccountCommand}"/>
-                                    <Button Content="Sign Out" FontSize="12" Padding="10,7" Margin="0,4,0,0"
-                                            Command="{Binding SignOutCommand}">
-                                        <Button.Style>
-                                            <Style TargetType="Button" BasedOn="{StaticResource GhostButton}">
-                                                <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
-                                            </Style>
-                                        </Button.Style>
-                                    </Button>
-                                </StackPanel>
+
+                        <ProgressBar Style="{StaticResource NovaProgressBar}" Width="360" Margin="0,11,0,0" Maximum="1"
+                                     Value="{Binding Progress, Mode=OneWay}"
+                                     Visibility="{Binding ProgressVisible, Converter={StaticResource BoolToVis}}"/>
+                        <TextBlock Text="{Binding SpeedText}" FontSize="10.5" Foreground="{DynamicResource TextDimBrush}"
+                                   HorizontalAlignment="Center" Margin="0,5,0,0"
+                                   Visibility="{Binding SpeedText, Converter={StaticResource StrToVis}}"/>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,14,0,0">
+                            <Border Style="{StaticResource InfoChip}">
+                                <TextBlock Style="{StaticResource ChipText}" Text="{Binding VersionInfo}"/>
                             </Border>
-                        </Popup>
-                    </Grid>
+                            <Border Style="{StaticResource InfoChip}">
+                                <TextBlock Style="{StaticResource ChipText}" Text="{Binding RamText}"/>
+                            </Border>
+                        </StackPanel>
 
-                    <StackPanel Grid.Row="1" VerticalAlignment="Center">
-                        <Border Background="{DynamicResource Panel2Brush}" CornerRadius="10" Padding="0,12"
-                                HorizontalAlignment="Center" Width="140">
-                            <!-- Native bitmap is 96×192 — shown 1:1 for perfect pixels -->
-                            <Image Source="{Binding SkinImage}" Width="96" Height="192" UseLayoutRounding="True"
-                                   SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                        </Border>
-                    </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+                            <Button Style="{StaticResource GhostButton}" Content="Change Version" Padding="13,6" FontSize="12"
+                                    Command="{Binding ChangeVersionCommand}"/>
+                            <Button Style="{StaticResource GhostButton}" Content="OptiFine" Padding="12,6" FontSize="12"
+                                    Margin="8,0,0,0" Command="{Binding OptiFineCommand}"
+                                    Visibility="{Binding IsNovaVersion, Converter={StaticResource BoolToVis}}"/>
+                        </StackPanel>
 
-                    <StackPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,10,0,0">
-                        <TextBlock Text="{Binding Username}" FontSize="15" FontFamily="Segoe UI Semibold"
-                                   HorizontalAlignment="Center"/>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
-                            <Ellipse Width="7" Height="7" Fill="{Binding OwnershipOk, Converter={StaticResource StatusBrush}}" VerticalAlignment="Center"/>
-                            <TextBlock Text="Microsoft account · signed in" FontSize="10.5" Margin="6,0,0,0"
-                                       Foreground="{DynamicResource TextDimBrush}"/>
+                        <!-- inline status + crash -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+                            <Ellipse Width="7" Height="7" Fill="{Binding JavaOk, Converter={StaticResource StatusBrush}}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding StatusText}" FontSize="11.5" Margin="8,0,0,0"
+                                       Foreground="{DynamicResource TextDimBrush}" MaxWidth="440" TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
                     </StackPanel>
                 </Grid>
             </Border>
+
+            <!-- Error strip under hero -->
+            <Border Grid.Row="1" VerticalAlignment="Bottom" Background="#26E5534B" CornerRadius="8" Padding="12" Margin="10"
+                    Visibility="{Binding CrashText, Converter={StaticResource StrToVis}}">
+                <StackPanel>
+                    <TextBlock Text="Game exited with a problem" Foreground="{DynamicResource DangerBrush}"
+                               FontFamily="Segoe UI Semibold" FontSize="12"/>
+                    <TextBlock Text="{Binding CrashText}" FontSize="10.5" Margin="0,5,0,0" MaxHeight="52"
+                               Foreground="{DynamicResource TextDimBrush}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
+                    <Button Style="{StaticResource GhostButton}" Content="Copy Details" Padding="10,4" FontSize="11"
+                            HorizontalAlignment="Left" Margin="0,8,0,0" Command="{Binding CopyErrorCommand}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- News -->
+            <StackPanel Grid.Row="2" Margin="0,16,0,0">
+                <TextBlock FontSize="13" FontFamily="Segoe UI Semibold" Margin="2,0,0,10">
+                    <Run Text="Latest News"/>
+                </TextBlock>
+                <ItemsControl ItemsSource="{Binding News}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="1"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,12,0" Height="120" ClipToBounds="True">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#26224A" Offset="0"/>
+                                        <GradientStop Color="#171624" Offset="0.55"/>
+                                        <GradientStop Color="#101116" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <Grid>
+                                    <Path Data="M 50,0 L 62,38 100,50 62,62 50,100 38,62 0,50 38,38 Z"
+                                          Fill="{DynamicResource AccentBrush}" Opacity="0.14" Width="130" Height="130"
+                                          Stretch="Uniform" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-28,0"/>
+                                    <Ellipse Width="9" Height="9" Fill="{DynamicResource SuccessBrush}"
+                                             HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0"/>
+                                    <Border Background="{DynamicResource AccentBrush}" CornerRadius="10" Padding="8,2"
+                                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,10,0">
+                                        <TextBlock Text="{Binding Date}" FontSize="9.5" Foreground="White" FontFamily="Segoe UI Semibold"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Bottom" Margin="14,0,14,10">
+                                        <TextBlock Text="{Binding Title}" FontSize="16" FontFamily="Segoe UI Black"
+                                                   Foreground="White" TextTrimming="CharacterEllipsis">
+                                            <TextBlock.Effect>
+                                                <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.7"/>
+                                            </TextBlock.Effect>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding Summary}" FontSize="10.5" Foreground="#B8FFFFFF"
+                                                   TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
         </Grid>
+
+        <!-- ============ FRIENDS COLUMN ============ -->
+        <Border Grid.Column="2" Style="{StaticResource Card}" Padding="14">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="{Binding FriendsHeader}" FontSize="13" FontFamily="Segoe UI Semibold"
+                           Margin="2,0,0,10"/>
+
+                <!-- add friend -->
+                <StackPanel Grid.Row="1" Margin="0,0,0,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" Style="{StaticResource NovaTextBox}" FontSize="12" Padding="10,7"
+                                 Text="{Binding AddFriendName, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Add a friend by Minecraft username" x:Name="AddFriendBox"
+                                 KeyDown="AddFriendBox_KeyDown"/>
+                        <Button Grid.Column="1" Style="{StaticResource NovaButton}" Content="Add" Padding="12,7"
+                                FontSize="12" Margin="6,0,0,0" Command="{Binding AddFriendCommand}"/>
+                    </Grid>
+                    <TextBlock Text="{Binding FriendError}" FontSize="10.5" Foreground="{DynamicResource DangerBrush}"
+                               TextWrapping="Wrap" Margin="2,6,0,0"
+                               Visibility="{Binding FriendError, Converter={StaticResource StrToVis}}"/>
+                    <TextBlock FontSize="10" Foreground="{DynamicResource TextDimBrush}" Margin="2,6,0,0" TextWrapping="Wrap"
+                               Text="Live online status turns on once a presence server is configured (see docs)."
+                               Visibility="{Binding PresenceEnabled, Converter={StaticResource InvBoolToVis}}"/>
+                </StackPanel>
+
+                <!-- friends list -->
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <ItemsControl ItemsSource="{Binding Friends}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,3" Height="38">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Grid.Column="0" Width="30" Height="30" VerticalAlignment="Center">
+                                            <Border CornerRadius="6" Background="{DynamicResource Panel2Brush}">
+                                                <Image Source="{Binding Head}" Width="26" Height="26"
+                                                       RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                                            </Border>
+                                            <Ellipse Width="9" Height="9" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                                     Stroke="{DynamicResource PanelBrush}" StrokeThickness="2"
+                                                     Fill="{Binding Online, Converter={StaticResource StatusBrush}}"
+                                                     Visibility="{Binding DataContext.PresenceEnabled, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource BoolToVis}}"/>
+                                        </Grid>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="9,0,0,0">
+                                            <TextBlock Text="{Binding Name}" FontSize="12.5" FontFamily="Segoe UI Semibold"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding Status}" FontSize="9.5" Foreground="{DynamicResource TextDimBrush}"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Style="{StaticResource CaptionButton}" Width="24" Height="24"
+                                                VerticalAlignment="Center" ToolTip="Remove friend" Command="{Binding RemoveCommand}">
+                                            <Path Data="{StaticResource IconClose}" StrokeThickness="1.5" Stretch="Uniform"
+                                                  Width="8" Height="8"
+                                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- empty state -->
+                        <TextBlock Text="No friends yet. Add someone by their Minecraft username above."
+                                   FontSize="11" Foreground="{DynamicResource TextDimBrush}" TextWrapping="Wrap"
+                                   Margin="2,10,0,0" TextAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Friends.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>
