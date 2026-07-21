@@ -106,7 +106,7 @@ public sealed class StarfieldCanvas : FrameworkElement
                 0.5 + random.NextDouble() * 1.1,
                 0.10 + random.NextDouble() * 0.42,
                 random.NextDouble() * Math.PI * 2,
-                0.6 + random.NextDouble() * 1.8);
+                0.15 + random.NextDouble() * 0.5);
         }
     }
 
